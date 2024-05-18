@@ -1,2 +1,3 @@
 # fmtna
-CLI ap to format filenames according to a chosen naming convention
+
+A CLI app to format filenames according to a chosen naming convention.
