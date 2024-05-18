@@ -2,6 +2,14 @@
 name = "fmtna"
 version = "0.1.0"
 edition = "2021"
+authors = ["Yann Salmon"]
+description = "A CLI app to format filenames according to a chosen naming convention."
+readme = "README.md"
+repository = "https://github.com/yanns1/fmtna"
+license = "GPL-3.0"
+keyworks = ["format", "filenames", "naming convention"]
+categories = ["command-line-utilities"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
