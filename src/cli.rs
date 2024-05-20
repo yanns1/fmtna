@@ -4,9 +4,13 @@ use serde::Serialize;
 use std::fmt::Debug;
 use std::path::PathBuf;
 
+// See https://github.com/clap-rs/clap/issues/975#issuecomment-1426424232
+// for the issue of having a default subcommand.
+
 #[derive(Parser, Debug)]
 #[command(version)]
 #[command(propagate_version = true)]
+#[command(args_conflicts_with_subcommands = true)]
 #[clap(verbatim_doc_comment)]
 /// Format filenames according to a chosen naming convention.
 ///
