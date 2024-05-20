@@ -28,13 +28,13 @@ use std::path::PathBuf;
 /// It can go as far as corrupting your system.
 pub struct Cli {
     #[command(subcommand)]
-    subcommands: Option<Subcommands>,
+    pub command: Option<Command>,
 
     /// A list of files (any kind of file) for which to format the name.
     ///
     /// If no file is given, nothing will happen and the program will exit gracefully.
     #[clap(verbatim_doc_comment)]
-    files: Vec<PathBuf>,
+    pub files: Vec<PathBuf>,
 
     /// The naming convention to use.
     ///
@@ -42,7 +42,7 @@ pub struct Cli {
     /// If one is specified in the config file, it will be used instead.
     #[clap(verbatim_doc_comment)]
     #[arg(short, long)]
-    naming_convention: Option<NamingConvention>,
+    pub naming_convention: Option<NamingConvention>,
 
     /// Recursively format filenames within directories.
     ///
@@ -52,7 +52,7 @@ pub struct Cli {
     /// the directories will be formatted as well.
     #[clap(verbatim_doc_comment)]
     #[arg(short, long)]
-    recursive: bool,
+    pub recursive: bool,
 
     /// Don't treat dots as separators, let them as is.
     ///
@@ -62,7 +62,7 @@ pub struct Cli {
     /// this flog is used.
     #[clap(verbatim_doc_comment)]
     #[arg(long)]
-    keep_dots: bool,
+    pub keep_dots: bool,
 
     /// Keep special characters.
     ///
@@ -72,10 +72,10 @@ pub struct Cli {
     /// accented letters that are replaced by their non-accented variants.
     #[clap(verbatim_doc_comment)]
     #[arg(long)]
-    keep_special_chars: bool,
+    pub keep_special_chars: bool,
 }
 
-#[derive(ValueEnum, Clone, Debug, Serialize, Deserialize)]
+#[derive(ValueEnum, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum NamingConvention {
     #[serde(rename = "camelCase")]
     #[value(name = "camelCase")]
@@ -97,8 +97,8 @@ pub enum NamingConvention {
     Upper,
 }
 
-#[derive(Subcommand, Clone, Debug)]
-pub enum Subcommands {
+#[derive(Subcommand, Clone, Debug, PartialEq, Eq)]
+pub enum Command {
     /// Exclude filenames matching the given patterns when formatting.
     ///
     /// Exclude patterns are specified in the configuration file exclude.txt.
@@ -107,7 +107,7 @@ pub enum Subcommands {
     #[clap(verbatim_doc_comment)]
     Exclude {
         #[command(subcommand)]
-        subcommands: ExcludeSubcommands,
+        command: ExcludeCommand,
     },
 
     /// Revert filename changes.
@@ -133,8 +133,8 @@ pub enum Subcommands {
     },
 }
 
-#[derive(Subcommand, Clone, Debug)]
-pub enum ExcludeSubcommands {
+#[derive(Subcommand, Clone, Debug, PartialEq, Eq)]
+pub enum ExcludeCommand {
     /// Add a pattern to exclude.txt.
     #[clap(verbatim_doc_comment)]
     Add {

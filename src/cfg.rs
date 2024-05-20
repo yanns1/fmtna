@@ -7,19 +7,19 @@ use serde::Serialize;
 /// It is then used with [`confy::load()`].
 pub struct Cfg {
     /// Same as [Cli::naming_convention](crate::cli::Cli::naming_convention)
-    naming_convention: NamingConvention,
+    pub naming_convention: NamingConvention,
 
     /// Same as [Cli::recursive](crate::cli::Cli::recursive)
-    recursive: bool,
+    pub recursive: bool,
 
     /// Same as [Cli::keep_dots](crate::cli::Cli::keep_dots)
-    keep_dots: bool,
+    pub keep_dots: bool,
 
     /// Same as [Cli::keep_special_chars](crate::cli::Cli::keep_special_chars)
-    keep_special_chars: bool,
+    pub keep_special_chars: bool,
 
     /// Same as [ExcludeSubcommands::Edit::editor](crate::cli::ExcludeSubcommands::Edit::editor)
-    editor: String,
+    pub editor: String,
 }
 
 impl ::std::default::Default for Cfg {
