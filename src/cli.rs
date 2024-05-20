@@ -1,4 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use serde::Deserialize;
+use serde::Serialize;
 use std::fmt::Debug;
 use std::path::PathBuf;
 
@@ -73,7 +75,7 @@ pub struct Cli {
     keep_special_chars: bool,
 }
 
-#[derive(ValueEnum, Clone, Debug)]
+#[derive(ValueEnum, Clone, Debug, Serialize, Deserialize)]
 pub enum NamingConvention {
     #[value(name = "camelCase")]
     CamelCase,
@@ -90,7 +92,7 @@ pub enum NamingConvention {
 }
 
 #[derive(Subcommand, Clone, Debug)]
-enum Subcommands {
+pub enum Subcommands {
     /// Exclude filenames matching the given patterns when formatting.
     ///
     /// Exclude patterns are specified in the configuration file exclude.txt.
@@ -126,7 +128,7 @@ enum Subcommands {
 }
 
 #[derive(Subcommand, Clone, Debug)]
-enum ExcludeSubcommands {
+pub enum ExcludeSubcommands {
     /// Add a pattern to exclude.txt.
     #[clap(verbatim_doc_comment)]
     Add {
