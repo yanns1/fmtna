@@ -1,4 +1,4 @@
-use crate::cli::NamingConvention;
+use crate::naming_conventions::NamingConvention;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -6,19 +6,19 @@ use serde::Serialize;
 /// The struct that defines the configuration file entries.
 /// It is then used with [`confy::load()`].
 pub struct Cfg {
-    /// Same as [Cli::naming_convention](crate::cli::Cli::naming_convention)
+    /// Same as [DefaultArgs::naming_convention](crate::default::DefaultArgs::naming_convention)
     pub naming_convention: NamingConvention,
 
-    /// Same as [Cli::recursive](crate::cli::Cli::recursive)
+    /// Same as [DefaultArgs::recursive](crate::default::DefaultArgs::recursive)
     pub recursive: bool,
 
-    /// Same as [Cli::keep_dots](crate::cli::Cli::keep_dots)
+    /// Same as [DefaultArgs::keep_dots](crate::default::DefaultArgs::keep_dots)
     pub keep_dots: bool,
 
-    /// Same as [Cli::keep_special_chars](crate::cli::Cli::keep_special_chars)
+    /// Same as [DefaultArgs::keep_special_chars](crate::default::DefaultArgs::keep_special_chars)
     pub keep_special_chars: bool,
 
-    /// Same as [ExcludeSubcommands::Edit::editor](crate::cli::ExcludeSubcommands::Edit::editor)
+    /// Same as [crate::exclude::edit::EditCli::editor](crate::exclude::edit::EditCli::editor)
     pub editor: String,
 }
 

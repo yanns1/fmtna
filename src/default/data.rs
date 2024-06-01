@@ -2,21 +2,12 @@ use std::path::PathBuf;
 
 use anyhow::anyhow;
 
+use super::cli::DefaultArgs;
 use crate::cfg::Cfg;
-use crate::cli::Cli;
-use crate::cli::Command;
-use crate::cli::ExcludeCommand;
-use crate::cli::NamingConvention;
+use crate::naming_conventions::NamingConvention;
 
-/// An aggregation of configurations coming from the CLI ([`Cli`]) and the configuration file ([`Cfg`]).
-/// A configuration coming from the CLI always takes precedence.
-/// A configuration coming from the configuration file is applied only when the equivalent is not
-/// specified at the CLI level.
 #[derive(Debug, PartialEq, Eq)]
-pub struct Params {
-    /// Same as [Cli::command](crate::cli::Cli::command)
-    pub command: Option<Command>,
-
+pub struct Data {
     /// Same as [Cli::files](crate::cli::Cli::files)
     pub files: Vec<PathBuf>,
 
@@ -31,13 +22,10 @@ pub struct Params {
 
     /// Same as [Cli::keep_special_chars](crate::cli::Cli::keep_special_chars)
     pub keep_special_chars: bool,
-
-    /// Same as [ExcludeCommand::Edit::editor](crate::cli::ExcludeCommand::Edit::editor)
-    pub editor: Option<String>,
 }
 
-impl Params {
-    pub fn new(cli: Cli, cfg: Cfg) -> anyhow::Result<Self> {
+impl Data {
+    pub fn new(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Self> {
         // Check that all paths are valid
         for file in &cli.files {
             if !file.exists() {
@@ -49,22 +37,13 @@ impl Params {
         let recursive = cli.recursive || cfg.recursive;
         let keep_dots = cli.keep_dots || cfg.keep_dots;
         let keep_special_chars = cli.keep_special_chars || cfg.keep_special_chars;
-        let mut editor: Option<String> = None;
-        if let Some(Command::Exclude {
-            command: ExcludeCommand::Edit { editor: cli_editor },
-        }) = cli.command.clone()
-        {
-            editor = cli_editor.or(Some(cfg.editor))
-        }
 
-        Ok(Params {
+        Ok(Data {
             files: cli.files,
-            command: cli.command,
             naming_convention,
             recursive,
             keep_dots,
             keep_special_chars,
-            editor,
         })
     }
 }
@@ -72,12 +51,19 @@ impl Params {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[derive(Debug)]
     struct TestCase {
-        cli: Cli,
+        cli: DefaultArgs,
         cfg: Cfg,
-        params: Params,
+        data: Data,
+    }
+
+    fn get_tmp_dir() -> PathBuf {
+        let mut tmp_dir = std::env::current_dir().unwrap();
+        tmp_dir.push(".tmp");
+        tmp_dir
     }
 
     #[test]
@@ -85,12 +71,7 @@ mod tests {
         let test_cases = vec![
             // Cli takes precedence
             TestCase {
-                cli: Cli {
-                    command: Some(Command::Exclude {
-                        command: ExcludeCommand::Edit {
-                            editor: Some(String::from("nvim")),
-                        },
-                    }),
+                cli: DefaultArgs {
                     files: vec![],
                     naming_convention: Some(NamingConvention::CamelCase),
                     recursive: true,
@@ -104,24 +85,17 @@ mod tests {
                     keep_special_chars: false,
                     editor: String::from("vi"),
                 },
-                params: Params {
-                    command: Some(Command::Exclude {
-                        command: ExcludeCommand::Edit {
-                            editor: Some(String::from("nvim")),
-                        },
-                    }),
+                data: Data {
                     files: vec![],
                     naming_convention: NamingConvention::CamelCase,
                     recursive: true,
                     keep_dots: true,
                     keep_special_chars: true,
-                    editor: Some(String::from("nvim")),
                 },
             },
             // When option not defined via Cli, backup to Cfg
             TestCase {
-                cli: Cli {
-                    command: None,
+                cli: DefaultArgs {
                     files: vec![],
                     naming_convention: None,
                     recursive: false,
@@ -135,20 +109,17 @@ mod tests {
                     keep_special_chars: true,
                     editor: String::from("vi"),
                 },
-                params: Params {
-                    command: None,
+                data: Data {
                     files: vec![],
                     naming_convention: NamingConvention::SnakeCase,
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: true,
-                    editor: None,
                 },
             },
             // A mix of options coming from Cli and others from Cfg
             TestCase {
-                cli: Cli {
-                    command: None,
+                cli: DefaultArgs {
                     files: vec![],
                     naming_convention: Some(NamingConvention::CamelCase),
                     recursive: true,
@@ -162,26 +133,66 @@ mod tests {
                     keep_special_chars: true,
                     editor: String::from("vi"),
                 },
-                params: Params {
-                    command: None,
+                data: Data {
                     files: vec![],
                     naming_convention: NamingConvention::CamelCase,
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: true,
-                    editor: None,
                 },
             },
         ];
 
         for test_case in test_cases {
-            let params = Params::new(test_case.cli, test_case.cfg).expect(
-                "Params::new should have succeed. There must be an error in the test case.",
-            );
+            let data = Data::new(test_case.cli, test_case.cfg)
+                .expect("Data::new should have succeed. There must be an error in the test case.");
             assert_eq!(
-                params, test_case.params,
+                data, test_case.data,
                 "Expected {:?}, but got {:?}",
-                test_case.params, params
+                test_case.data, data
+            );
+        }
+    }
+
+    #[test]
+    fn data_instantiation_fail_if_wrong_files() {
+        let tmp_dir = get_tmp_dir();
+        let mut f1 = tmp_dir.clone();
+        f1.push("inexistant_file1");
+        let mut f2 = tmp_dir.clone();
+        f2.push("inexistant_file2");
+        let mut f3 = tmp_dir.clone();
+        f3.push("inexistant_file3");
+        let files: Vec<PathBuf> = vec![f1, f2, f3];
+
+        let test_cases = vec![TestCase {
+            cli: DefaultArgs {
+                files: files,
+                naming_convention: Some(NamingConvention::CamelCase),
+                recursive: true,
+                keep_dots: true,
+                keep_special_chars: true,
+            },
+            cfg: Cfg {
+                naming_convention: NamingConvention::SnakeCase,
+                recursive: false,
+                keep_dots: false,
+                keep_special_chars: false,
+                editor: String::from("vi"),
+            },
+            data: Data {
+                files: vec![],
+                naming_convention: NamingConvention::CamelCase,
+                recursive: true,
+                keep_dots: true,
+                keep_special_chars: true,
+            },
+        }];
+
+        for test_case in test_cases {
+            assert!(
+                Data::new(test_case.cli, test_case.cfg).is_err(),
+                "Expected Data::new to fail.",
             );
         }
     }

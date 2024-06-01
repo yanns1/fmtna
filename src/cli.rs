@@ -1,8 +1,8 @@
-use clap::{Parser, Subcommand, ValueEnum};
-use serde::Deserialize;
-use serde::Serialize;
+use crate::default::DefaultArgs;
+use crate::exclude::ExcludeCli;
+use crate::revert::RevertCli;
+use clap::{Parser, Subcommand};
 use std::fmt::Debug;
-use std::path::PathBuf;
 
 // See https://github.com/clap-rs/clap/issues/975#issuecomment-1426424232
 // for the issue of having a default subcommand.
@@ -34,149 +34,12 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Command>,
 
-    /// A list of files (any kind of file) for which to format the name.
-    ///
-    /// If no file is given, nothing will happen and the program will exit gracefully.
-    #[clap(verbatim_doc_comment)]
-    pub files: Vec<PathBuf>,
-
-    /// The naming convention to use.
-    ///
-    /// The default is "snake_case".
-    /// If one is specified in the config file, it will be used instead.
-    #[clap(verbatim_doc_comment)]
-    #[arg(short, long)]
-    pub naming_convention: Option<NamingConvention>,
-
-    /// Recursively format filenames within directories.
-    ///
-    /// For arguments that are directories, the default is to treat them like
-    /// any other file, that is format their names.
-    /// By using this flog, every file (directories included) within each of
-    /// the directories will be formatted as well.
-    #[clap(verbatim_doc_comment)]
-    #[arg(short, long)]
-    pub recursive: bool,
-
-    /// Don't treat dots as separators, let them as is.
-    ///
-    /// A separator is a character indicating a break between words.
-    /// The characters "_", "-", "." and spaces are considered separators
-    /// and may changed according to the chosen naming convention, unless
-    /// this flog is used.
-    #[clap(verbatim_doc_comment)]
-    #[arg(long)]
-    pub keep_dots: bool,
-
-    /// Keep special characters.
-    ///
-    /// By special characters we mean characters that are neither alphanumeric
-    /// nor separators ("_", "-", "." and spaces).
-    /// If not set, special characters are removed with the exception of some
-    /// accented letters that are replaced by their non-accented variants.
-    #[clap(verbatim_doc_comment)]
-    #[arg(long)]
-    pub keep_special_chars: bool,
-}
-
-#[derive(ValueEnum, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum NamingConvention {
-    #[serde(rename = "camelCase")]
-    #[value(name = "camelCase")]
-    CamelCase,
-    #[serde(rename = "kebab-case")]
-    #[value(name = "kebab-case")]
-    KebabCase,
-    #[serde(rename = "snake_case")]
-    #[value(name = "snake_case")]
-    SnakeCase,
-    #[serde(rename = "PascalCase")]
-    #[value(name = "PascalCase")]
-    PascalCase,
-    #[serde(rename = "lower")]
-    #[value(name = "lower")]
-    Lower,
-    #[serde(rename = "UPPER")]
-    #[value(name = "UPPER")]
-    Upper,
+    #[clap(flatten)]
+    pub args: DefaultArgs,
 }
 
 #[derive(Subcommand, Clone, Debug, PartialEq, Eq)]
 pub enum Command {
-    /// Exclude filenames matching the given patterns when formatting.
-    ///
-    /// Exclude patterns are specified in the configuration file exclude.txt.
-    /// This subcommand allows to add/remove entries to/from this file from the
-    /// command-line, or open it for edition it using your favorite editor.
-    #[clap(verbatim_doc_comment)]
-    Exclude {
-        #[command(subcommand)]
-        command: ExcludeCommand,
-    },
-
-    /// Revert filename changes.
-    ///
-    /// This subcommand allows to revert previous runs of the program.
-    /// This is useful when the changes are not the expected ones
-    /// or have unexpected consequences.
-    ///
-    /// fmtna automatically backs up the filename changes in
-    /// a file (in your config directory) each time it runs.
-    /// The contents of the backup file is exactly the output printed
-    /// to the terminal.
-    /// You can go back to this file in case something went wrong,
-    /// modify it if desired and give it as argument to this
-    /// subcommand.
-    /// You can even make a file on you own provided it has the
-    /// right format, but you shouldn't have to do this.
-    #[clap(verbatim_doc_comment)]
-    Revert {
-        #[clap(verbatim_doc_comment)]
-        /// The file specifying the filename changes to revert.
-        backup_file: PathBuf,
-    },
-}
-
-#[derive(Subcommand, Clone, Debug, PartialEq, Eq)]
-pub enum ExcludeCommand {
-    /// Add a pattern to exclude.txt.
-    #[clap(verbatim_doc_comment)]
-    Add {
-        /// A pattern to add to exclude.txt.
-        ///
-        /// If the pattern already is in exclude.txt,
-        /// nothing will happen and you will be warned about it.
-        #[clap(verbatim_doc_comment)]
-        pattern: String,
-    },
-
-    /// Delete a pattern from exclude.txt.
-    #[clap(verbatim_doc_comment)]
-    Del {
-        /// The pattern to delete from exclude.txt`.
-        ///
-        /// If the pattern is not found in exclude.txt,
-        /// nothing will happen and you will be warned about it.
-        /// Furthermore, the closest pattern found in the file
-        /// will be proposed for deletion as a guess for
-        /// what you really wanted to delete.
-        #[clap(verbatim_doc_comment)]
-        pattern: String,
-    },
-
-    /// Open exclude.txt for edition.
-    ///
-    /// By default the value of the environment variable $EDITOR is
-    /// used as the editor with which to open exclude.txt.
-    /// If editor is set in the config file, then it takes precedence.
-    /// If the EDITOR argument to this subcommand is used, then it
-    /// takes precedence over both the config and then environment
-    /// variable.
-    /// If none of the three options are set, "vi" will be used.
-    #[clap(verbatim_doc_comment)]
-    Edit {
-        /// The editor with which to open exclude.txt.
-        #[clap(verbatim_doc_comment)]
-        editor: Option<String>,
-    },
+    Exclude(ExcludeCli),
+    Revert(RevertCli),
 }
