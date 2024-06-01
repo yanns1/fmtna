@@ -26,13 +26,6 @@ pub struct Data {
 
 impl Data {
     pub fn new(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Self> {
-        // Check that all paths are valid
-        for file in &cli.files {
-            if !file.exists() {
-                return Err(anyhow!(format!("{:?} does not exist.", file)));
-            }
-        }
-
         let naming_convention = cli.naming_convention.unwrap_or(cfg.naming_convention);
         let recursive = cli.recursive || cfg.recursive;
         let keep_dots = cli.keep_dots || cfg.keep_dots;
