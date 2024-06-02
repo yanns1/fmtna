@@ -19,7 +19,7 @@ impl EditEngine {
 }
 
 impl Engine for EditEngine {
-    fn run(&self) -> anyhow::Result<()> {
+    fn run(&mut self) -> anyhow::Result<()> {
         todo!()
     }
 }

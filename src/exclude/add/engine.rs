@@ -19,7 +19,7 @@ impl AddEngine {
 }
 
 impl Engine for AddEngine {
-    fn run(&self) -> anyhow::Result<()> {
+    fn run(&mut self) -> anyhow::Result<()> {
         todo!()
     }
 }

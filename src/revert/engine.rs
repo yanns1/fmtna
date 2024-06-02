@@ -19,7 +19,7 @@ impl RevertEngine {
 }
 
 impl Engine for RevertEngine {
-    fn run(&self) -> anyhow::Result<()> {
+    fn run(&mut self) -> anyhow::Result<()> {
         todo!()
     }
 }

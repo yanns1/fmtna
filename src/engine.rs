@@ -6,7 +6,7 @@ use crate::exclude;
 use crate::revert;
 
 pub trait Engine {
-    fn run(&self) -> anyhow::Result<()>;
+    fn run(&mut self) -> anyhow::Result<()>;
 }
 
 pub fn get_engine(cli: Cli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {

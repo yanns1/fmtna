@@ -19,7 +19,7 @@ impl DelEngine {
 }
 
 impl Engine for DelEngine {
-    fn run(&self) -> anyhow::Result<()> {
+    fn run(&mut self) -> anyhow::Result<()> {
         todo!()
     }
 }

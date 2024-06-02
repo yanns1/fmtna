@@ -1,3 +1,4 @@
+mod utils;
 mod cfg;
 mod cli;
 mod default;
@@ -15,6 +16,6 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let cfg: Cfg = confy::load(crate_name!(), crate_name!())?;
 
-    let engine = get_engine(cli, cfg)?;
+    let mut engine = get_engine(cli, cfg)?;
     engine.run()
 }
