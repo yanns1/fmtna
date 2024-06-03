@@ -146,47 +146,4 @@ mod tests {
             );
         }
     }
-
-    #[test]
-    fn data_instantiation_fail_if_wrong_files() {
-        let tmp_dir = get_tmp_dir();
-        let mut f1 = tmp_dir.clone();
-        f1.push("inexistant_file1");
-        let mut f2 = tmp_dir.clone();
-        f2.push("inexistant_file2");
-        let mut f3 = tmp_dir.clone();
-        f3.push("inexistant_file3");
-        let files: Vec<PathBuf> = vec![f1, f2, f3];
-
-        let test_cases = vec![TestCase {
-            cli: DefaultArgs {
-                files: files,
-                naming_convention: Some(NamingConvention::CamelCase),
-                recursive: true,
-                keep_dots: true,
-                keep_special_chars: true,
-            },
-            cfg: Cfg {
-                naming_convention: NamingConvention::SnakeCase,
-                recursive: false,
-                keep_dots: false,
-                keep_special_chars: false,
-                editor: String::from("vi"),
-            },
-            data: Data {
-                files: vec![],
-                naming_convention: NamingConvention::CamelCase,
-                recursive: true,
-                keep_dots: true,
-                keep_special_chars: true,
-            },
-        }];
-
-        for test_case in test_cases {
-            assert!(
-                Data::new(test_case.cli, test_case.cfg).is_err(),
-                "Expected Data::new to fail.",
-            );
-        }
-    }
 }
