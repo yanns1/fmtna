@@ -1,4 +1,3 @@
-mod utils;
 mod cfg;
 mod cli;
 mod default;
@@ -6,6 +5,7 @@ mod engine;
 mod exclude;
 mod naming_conventions;
 mod revert;
+mod utils;
 
 use crate::cfg::Cfg;
 use crate::cli::Cli;

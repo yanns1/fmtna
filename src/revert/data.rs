@@ -26,6 +26,7 @@ impl Data {
 mod tests {
     use super::*;
     use crate::naming_conventions::NamingConvention;
+    use crate::utils::test::get_tmp_dir;
     use serial_test::serial;
     use std::fs;
 
@@ -34,12 +35,6 @@ mod tests {
         cli: RevertCli,
         cfg: Cfg,
         data: Data,
-    }
-
-    fn get_tmp_dir() -> PathBuf {
-        let mut tmp_dir = std::env::current_dir().unwrap();
-        tmp_dir.push(".tmp");
-        tmp_dir
     }
 
     fn mk_backup_file() -> PathBuf {

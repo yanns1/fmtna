@@ -1,7 +1,5 @@
 use std::path::PathBuf;
 
-use anyhow::anyhow;
-
 use super::cli::DefaultArgs;
 use crate::cfg::Cfg;
 use crate::naming_conventions::NamingConvention;
@@ -44,19 +42,12 @@ impl Data {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[derive(Debug)]
     struct TestCase {
         cli: DefaultArgs,
         cfg: Cfg,
         data: Data,
-    }
-
-    fn get_tmp_dir() -> PathBuf {
-        let mut tmp_dir = std::env::current_dir().unwrap();
-        tmp_dir.push(".tmp");
-        tmp_dir
     }
 
     #[test]
