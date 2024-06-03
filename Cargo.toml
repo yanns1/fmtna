@@ -18,8 +18,10 @@ anyhow = "1.0.86"
 clap = { version = "4.5.4", features = ["derive", "cargo"] }
 confy = "0.6.1"
 crossterm = "0.27.0"
+path-absolutize = { version = "3.1.1", features = ["once_cell_cache"] }
 regex = "1.10.4"
 serde = { version = "1.0.202", features = ["derive"] }
+walkdir = "2"
 
 [dev-dependencies]
 serial_test = "3.1.1"
