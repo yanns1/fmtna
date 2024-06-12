@@ -18,6 +18,9 @@ pub struct Cfg {
     /// Same as [DefaultArgs::keep_special_chars](crate::default::DefaultArgs::keep_special_chars)
     pub keep_special_chars: bool,
 
+    /// Same as [DefaultArgs::keep_unicode](crate::default::DefaultArgs::keep_unicode)
+    pub keep_unicode: bool,
+
     /// Same as [crate::exclude::edit::EditCli::editor](crate::exclude::edit::EditCli::editor)
     pub editor: String,
 }
@@ -29,6 +32,7 @@ impl ::std::default::Default for Cfg {
             recursive: false,
             keep_dots: false,
             keep_special_chars: false,
+            keep_unicode: false,
             editor: String::from("vi"),
         }
     }

@@ -71,11 +71,13 @@ impl DefaultEngine {
         }
         let parent_dir = parent_dir.unwrap();
 
+        // TODO: Handle dotfiles so has to send only the part after the dot the naming convetion
         let new_file_stem = apply_nc(
             &self.data.naming_convention,
             file_stem,
             self.data.keep_dots,
             self.data.keep_special_chars,
+            self.data.keep_unicode,
         );
 
         let mut new_file = parent_dir.to_owned();
@@ -117,7 +119,6 @@ impl Engine for DefaultEngine {
     fn run(&mut self) -> anyhow::Result<()> {
         while let Some(f) = self.data.files.pop() {
             match self.change_stem_of_file(&f) {
-                // TODO: option for silently ignoring errors, otherwise notify and ask to continue
                 ChangeStemResult::FileDoesntExist => {
                     let f = f.absolutize()?;
                     self.run_error_interaction(&f, "File doesn't exist.")?;
