@@ -71,6 +71,7 @@ mod tests {
                     recursive: false,
                     keep_dots: false,
                     keep_special_chars: false,
+                    keep_unicode: false,
                     editor: String::from("vi"),
                 },
                 data: Data {
@@ -103,6 +104,7 @@ mod tests {
             recursive: false,
             keep_dots: false,
             keep_special_chars: false,
+            keep_unicode: false,
             editor: String::from("vi"),
         };
 

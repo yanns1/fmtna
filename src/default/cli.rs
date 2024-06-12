@@ -49,4 +49,12 @@ pub struct DefaultArgs {
     #[clap(verbatim_doc_comment)]
     #[arg(long)]
     pub keep_special_chars: bool,
+
+    /// Keep Unicode (more precisely, non-ASCII) characters.
+    ///
+    /// When not set, unicode characters to their closest ASCII counterparts
+    /// using https://crates.io/crates/unidecode.
+    #[clap(verbatim_doc_comment)]
+    #[arg(long)]
+    pub keep_unicode: bool,
 }

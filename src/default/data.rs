@@ -20,6 +20,9 @@ pub struct Data {
 
     /// Same as [Cli::keep_special_chars](crate::cli::Cli::keep_special_chars)
     pub keep_special_chars: bool,
+
+    /// Same as [Cli::keep_unicode](crate::cli::Cli::keep_unicode)
+    pub keep_unicode: bool,
 }
 
 impl Data {
@@ -28,6 +31,7 @@ impl Data {
         let recursive = cli.recursive || cfg.recursive;
         let keep_dots = cli.keep_dots || cfg.keep_dots;
         let keep_special_chars = cli.keep_special_chars || cfg.keep_special_chars;
+        let keep_unicode = cli.keep_unicode || cfg.keep_unicode;
 
         Ok(Data {
             files: cli.files,
@@ -35,6 +39,7 @@ impl Data {
             recursive,
             keep_dots,
             keep_special_chars,
+            keep_unicode,
         })
     }
 }
@@ -61,12 +66,14 @@ mod tests {
                     recursive: true,
                     keep_dots: true,
                     keep_special_chars: true,
+                    keep_unicode: true,
                 },
                 cfg: Cfg {
                     naming_convention: NamingConvention::SnakeCase,
                     recursive: false,
                     keep_dots: false,
                     keep_special_chars: false,
+                    keep_unicode: false,
                     editor: String::from("vi"),
                 },
                 data: Data {
@@ -75,6 +82,7 @@ mod tests {
                     recursive: true,
                     keep_dots: true,
                     keep_special_chars: true,
+                    keep_unicode: true,
                 },
             },
             // When option not defined via Cli, backup to Cfg
@@ -85,12 +93,14 @@ mod tests {
                     recursive: false,
                     keep_dots: false,
                     keep_special_chars: false,
+                    keep_unicode: false,
                 },
                 cfg: Cfg {
                     naming_convention: NamingConvention::SnakeCase,
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: true,
+                    keep_unicode: true,
                     editor: String::from("vi"),
                 },
                 data: Data {
@@ -99,6 +109,7 @@ mod tests {
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: true,
+                    keep_unicode: true,
                 },
             },
             // A mix of options coming from Cli and others from Cfg
@@ -109,12 +120,14 @@ mod tests {
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: false,
+                    keep_unicode: true,
                 },
                 cfg: Cfg {
                     naming_convention: NamingConvention::SnakeCase,
                     recursive: false,
                     keep_dots: false,
                     keep_special_chars: true,
+                    keep_unicode: false,
                     editor: String::from("vi"),
                 },
                 data: Data {
@@ -123,6 +136,7 @@ mod tests {
                     recursive: true,
                     keep_dots: false,
                     keep_special_chars: true,
+                    keep_unicode: true,
                 },
             },
         ];
