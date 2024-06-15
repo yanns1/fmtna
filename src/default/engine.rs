@@ -192,7 +192,11 @@ impl Engine for DefaultEngine {
                 }
                 ChangeStemResult::NoNeedToRename => {
                     if self.data.recursive && !f.is_symlink() && f.is_dir() {
-                        for entry in WalkDir::new(f).into_iter().filter_map(|e| e.ok()) {
+                        for entry in WalkDir::new(f)
+                            .min_depth(1)
+                            .into_iter()
+                            .filter_map(|e| e.ok())
+                        {
                             self.data.files.push(entry.path().to_owned());
                         }
                     }
@@ -204,7 +208,11 @@ impl Engine for DefaultEngine {
                     println!("{}", format!("(d) {} -> {}", path, new_path).dark_grey());
 
                     if self.data.recursive && !new_file.is_symlink() && new_file.is_dir() {
-                        for entry in WalkDir::new(new_file).into_iter().filter_map(|e| e.ok()) {
+                        for entry in WalkDir::new(new_file)
+                            .min_depth(1)
+                            .into_iter()
+                            .filter_map(|e| e.ok())
+                        {
                             self.data.files.push(entry.path().to_owned());
                         }
                     }
