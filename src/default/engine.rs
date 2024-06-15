@@ -71,7 +71,6 @@ impl DefaultEngine {
         }
         let parent_dir = parent_dir.unwrap();
 
-        // TODO: Handle dotfiles so has to send only the part after the dot the naming convetion
         let new_file_stem = apply_nc(
             &self.data.naming_convention,
             file_stem,

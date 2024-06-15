@@ -57,11 +57,21 @@ pub fn apply_nc(
 }
 
 fn camel_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
+
     let mut new_s = String::from("");
-    let unidecoded: String;
     let mut slice = s;
+    // in case we are dealing with a dotfile
+    if s.starts_with('.') {
+        new_s.push('.');
+        slice = &slice[1..];
+    }
+
+    let unidecoded: String;
     if !keep_unicode {
-        unidecoded = unidecode(s);
+        unidecoded = unidecode(slice);
         slice = unidecoded.as_ref();
     }
 
@@ -89,11 +99,21 @@ fn camel_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: 
 }
 
 fn kebab_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
+
     let mut new_s = String::from("");
-    let unidecoded: String;
     let mut slice = s;
+    // in case we are dealing with a dotfile
+    if s.starts_with('.') {
+        new_s.push('.');
+        slice = &slice[1..];
+    }
+
+    let unidecoded: String;
     if !keep_unicode {
-        unidecoded = unidecode(s);
+        unidecoded = unidecode(slice);
         slice = unidecoded.as_ref();
     }
 
@@ -116,11 +136,21 @@ fn kebab_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: 
 }
 
 fn snake_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
+
     let mut new_s = String::from("");
-    let unidecoded: String;
     let mut slice = s;
+    // in case we are dealing with a dotfile
+    if s.starts_with('.') {
+        new_s.push('.');
+        slice = &slice[1..];
+    }
+
+    let unidecoded: String;
     if !keep_unicode {
-        unidecoded = unidecode(s);
+        unidecoded = unidecode(slice);
         slice = unidecoded.as_ref();
     }
 
@@ -147,43 +177,63 @@ fn pascal_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode:
 }
 
 fn lower(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
     let _ = keep_dots;
 
-    let mut new_s: String;
+    let mut new_s = String::from("");
     let mut slice = s;
-    if !keep_unicode {
-        new_s = unidecode(s);
-        slice = new_s.as_ref();
-    }
-    if !keep_special_chars {
-        new_s = slice
-            .chars()
-            .filter(|c| SEPARATORS.contains(c) || !is_special(c))
-            .collect();
-        slice = new_s.as_ref();
+    // in case we are dealing with a dotfile
+    if s.starts_with('.') {
+        new_s.push('.');
+        slice = &slice[1..];
     }
 
-    slice.to_lowercase()
+    let unidecoded: String;
+    if !keep_unicode {
+        unidecoded = unidecode(slice);
+        slice = unidecoded.as_ref();
+    }
+
+    for c in slice
+        .chars()
+        .filter(|c| keep_special_chars || SEPARATORS.contains(c) || !is_special(c))
+    {
+        new_s.push(c);
+    }
+
+    new_s.to_lowercase()
 }
 
 fn upper(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
     let _ = keep_dots;
 
-    let mut new_s: String;
+    let mut new_s = String::from("");
     let mut slice = s;
-    if !keep_unicode {
-        new_s = unidecode(s);
-        slice = new_s.as_ref();
-    }
-    if !keep_special_chars {
-        new_s = slice
-            .chars()
-            .filter(|c| SEPARATORS.contains(c) || !is_special(c))
-            .collect();
-        slice = new_s.as_ref();
+    // in case we are dealing with a dotfile
+    if s.starts_with('.') {
+        new_s.push('.');
+        slice = &slice[1..];
     }
 
-    slice.to_uppercase()
+    let unidecoded: String;
+    if !keep_unicode {
+        unidecoded = unidecode(slice);
+        slice = unidecoded.as_ref();
+    }
+
+    for c in slice
+        .chars()
+        .filter(|c| keep_special_chars || SEPARATORS.contains(c) || !is_special(c))
+    {
+        new_s.push(c);
+    }
+
+    new_s.to_uppercase()
 }
 
 fn is_special(c: &char) -> bool {
@@ -307,6 +357,13 @@ mod test {
                 keep_unicode: false,
                 expected_output: "e_ca_devrait_etre_'asciifie'_mais_en_gardant_les_guillemets",
             },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".dotfile",
+            },
         ];
 
         for TestCase {
@@ -411,6 +468,13 @@ mod test {
                 keep_unicode: false,
                 expected_output: "e ca devrait etre 'asciifie' mais en gardant les guillemets",
             },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".dotfile",
+            },
         ];
 
         for TestCase {
@@ -514,6 +578,13 @@ mod test {
                 keep_special_chars: true,
                 keep_unicode: false,
                 expected_output: "E CA DEVRAIT ETRE 'ASCIIFIE' MAIS EN GARDANT LES GUILLEMETS",
+            },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".DOTFILE",
             },
         ];
 
@@ -633,6 +704,13 @@ mod test {
                 keep_unicode: false,
                 expected_output: "MultipleSeparators",
             },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".dotfile",
+            },
         ];
 
         for TestCase {
@@ -751,6 +829,13 @@ mod test {
                 keep_unicode: false,
                 expected_output: "MultipleSeparators",
             },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".dotfile",
+            },
         ];
 
         for TestCase {
@@ -854,6 +939,13 @@ mod test {
                 keep_special_chars: true,
                 keep_unicode: false,
                 expected_output: "e-ca-devrait-etre-'asciifie'-mais-en-gardant-les-guillemets",
+            },
+            TestCase {
+                s: ".dotfile",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: ".dotfile",
             },
         ];
 
