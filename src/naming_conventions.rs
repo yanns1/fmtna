@@ -57,12 +57,35 @@ pub fn apply_nc(
 }
 
 fn camel_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
-    // camelCase
-    let _ = s;
-    let _ = keep_dots;
-    let _ = keep_special_chars;
-    let _ = keep_unicode;
-    todo!()
+    let mut new_s = String::from("");
+    let unidecoded: String;
+    let mut slice = s;
+    if !keep_unicode {
+        unidecoded = unidecode(s);
+        slice = unidecoded.as_ref();
+    }
+
+    let mut should_upper = false;
+    for (i, c) in slice.chars().enumerate() {
+        if SEPARATORS.contains(&c) && !(keep_dots && c == '.') && i > 0 && i < slice.len() - 1 {
+            should_upper = true;
+        } else if is_special(&c) {
+            if keep_special_chars {
+                new_s.push(c);
+            } else {
+                continue;
+            }
+        } else if c.is_uppercase() && i > 0 && slice.chars().nth(i - 1).unwrap().is_lowercase() {
+            new_s.push(c);
+        } else if should_upper {
+            new_s.push(c.to_uppercase().next().unwrap());
+            should_upper = false;
+        } else {
+            new_s.push(c.to_lowercase().next().unwrap());
+        }
+    }
+
+    new_s
 }
 
 fn kebab_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
@@ -102,12 +125,7 @@ fn snake_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: 
 }
 
 fn pascal_case(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
-    // PascalCase
-    let _ = s;
-    let _ = keep_dots;
-    let _ = keep_special_chars;
-    let _ = keep_unicode;
-    todo!()
+    capitalize(&camel_case(s, keep_dots, keep_special_chars, keep_unicode))
 }
 
 fn lower(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool) -> String {
@@ -152,6 +170,16 @@ fn upper(s: &str, keep_dots: bool, keep_special_chars: bool, keep_unicode: bool)
 
 fn is_special(c: &char) -> bool {
     !c.is_alphanumeric()
+}
+
+fn capitalize(s: &str) -> String {
+    if s.is_empty() {
+        return String::from("");
+    }
+
+    let mut capitalized = s.to_string();
+    capitalized = capitalized.remove(0).to_uppercase().to_string() + &capitalized;
+    capitalized
 }
 
 #[cfg(test)]
@@ -481,6 +509,242 @@ mod test {
         {
             assert_eq!(
                 upper(s, keep_dots, keep_special_chars, keep_unicode),
+                expected_output
+            );
+        }
+    }
+
+    #[test]
+    fn test_camel_case() {
+        let test_cases = vec![
+            TestCase {
+                s: "",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "",
+            },
+            TestCase {
+                s: "a",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "a",
+            },
+            TestCase {
+                s: "A",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "a",
+            },
+            TestCase {
+                s: "from_snake_case",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromSnakeCase",
+            },
+            TestCase {
+                s: "FROM_UPPERCASE",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromUppercase",
+            },
+            TestCase {
+                s: "fromlowercase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromlowercase",
+            },
+            TestCase {
+                s: "fromCamelCase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromCamelCase",
+            },
+            TestCase {
+                s: "FromPascalCase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromPascalCase",
+            },
+            TestCase {
+                s: "from-kebab-case",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fromKebabCase",
+            },
+            TestCase {
+                s: "fRo_m`WHAT.ev-eR!",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "fRoMwhatEvER",
+            },
+            TestCase {
+                s: "é çà devrait être 'asciifié'",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "eCaDevraitEtreAsciifie",
+            },
+            TestCase {
+                s: "é çà devrait être 'asciifié' mais en gardant les guillemets",
+                keep_dots: false,
+                keep_special_chars: true,
+                keep_unicode: false,
+                expected_output: "eCaDevraitEtre'Asciifie'MaisEnGardantLesGuillemets",
+            },
+            TestCase {
+                s: "_separator_at_beginning_and_end_",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "separatorAtBeginningAndEnd",
+            },
+            TestCase {
+                s: "_____multiple_______separators_____",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "MultipleSeparators",
+            },
+        ];
+
+        for TestCase {
+            s,
+            keep_dots,
+            keep_special_chars,
+            keep_unicode,
+            expected_output,
+        } in test_cases
+        {
+            assert_eq!(
+                camel_case(s, keep_dots, keep_special_chars, keep_unicode),
+                expected_output
+            );
+        }
+    }
+
+    #[test]
+    fn test_pascal_case() {
+        let test_cases = vec![
+            TestCase {
+                s: "",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "",
+            },
+            TestCase {
+                s: "a",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "A",
+            },
+            TestCase {
+                s: "A",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "A",
+            },
+            TestCase {
+                s: "from_snake_case",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FromSnakeCase",
+            },
+            TestCase {
+                s: "FROM_UPPERCASE",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FromUppercase",
+            },
+            TestCase {
+                s: "fromlowercase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "Fromlowercase",
+            },
+            TestCase {
+                s: "fromCamelCase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FromCamelCase",
+            },
+            TestCase {
+                s: "FromPascalCase",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FromPascalCase",
+            },
+            TestCase {
+                s: "from-kebab-case",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FromKebabCase",
+            },
+            TestCase {
+                s: "fRo_m`WHAT.ev-eR!",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "FRoMwhatEvER",
+            },
+            TestCase {
+                s: "é çà devrait être 'asciifié'",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "ECaDevraitEtreAsciifie",
+            },
+            TestCase {
+                s: "é çà devrait être 'asciifié' mais en gardant les guillemets",
+                keep_dots: false,
+                keep_special_chars: true,
+                keep_unicode: false,
+                expected_output: "ECaDevraitEtre'Asciifie'MaisEnGardantLesGuillemets",
+            },
+            TestCase {
+                s: "_separator_at_beginning_and_end_",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "SeparatorAtBeginningAndEnd",
+            },
+            TestCase {
+                s: "_____multiple_______separators_____",
+                keep_dots: false,
+                keep_special_chars: false,
+                keep_unicode: false,
+                expected_output: "MultipleSeparators",
+            },
+        ];
+
+        for TestCase {
+            s,
+            keep_dots,
+            keep_special_chars,
+            keep_unicode,
+            expected_output,
+        } in test_cases
+        {
+            assert_eq!(
+                pascal_case(s, keep_dots, keep_special_chars, keep_unicode),
                 expected_output
             );
         }
