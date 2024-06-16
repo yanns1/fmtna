@@ -1,10 +1,16 @@
 use std::path::PathBuf;
 
+use regex::Regex;
+
 use super::cli::DefaultArgs;
 use crate::cfg::Cfg;
+use crate::exclude::get_exclude_file_path;
 use crate::naming_conventions::NamingConvention;
+use anyhow::anyhow;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct Data {
     /// Same as [Cli::files](crate::cli::Cli::files)
     pub files: Vec<PathBuf>,
@@ -23,6 +29,8 @@ pub struct Data {
 
     /// Same as [Cli::keep_unicode](crate::cli::Cli::keep_unicode)
     pub keep_unicode: bool,
+
+    pub exclude_regexes: Vec<Regex>,
 }
 
 impl Data {
@@ -33,6 +41,39 @@ impl Data {
         let keep_special_chars = cli.keep_special_chars || cfg.keep_special_chars;
         let keep_unicode = cli.keep_unicode || cfg.keep_unicode;
 
+        // NOTE: We store regexes into a vec, but the exclude file can be so big
+        // that the program's memory will not suffice.
+        // Furthermore, large number of patterns may negatively affect performance,
+        // but not sure if it will ever by a practical concern, so keep the simple
+        // way of doing things for now.
+        let mut exclude_regexes: Vec<Regex> = vec![];
+        let exclude_file_path = get_exclude_file_path()?;
+        if exclude_file_path.exists() {
+            let file = File::open(exclude_file_path.clone())?;
+            let reader = BufReader::new(file);
+            for (line_no, line) in reader.lines().enumerate() {
+                let line = line?;
+
+                if line.is_empty() || line.starts_with("//") {
+                    continue;
+                }
+
+                match Regex::new(&line) {
+                    Ok(exclude_re) => {
+                        exclude_regexes.push(exclude_re);
+                    }
+                    Err(_) => {
+                        return Err(anyhow!(
+                            "Exclude pattern {} is invalid (in {}, line {}).",
+                            line,
+                            exclude_file_path.to_string_lossy(),
+                            line_no
+                        ));
+                    }
+                }
+            }
+        }
+
         Ok(Data {
             files: cli.files,
             naming_convention,
@@ -40,6 +81,7 @@ impl Data {
             keep_dots,
             keep_special_chars,
             keep_unicode,
+            exclude_regexes,
         })
     }
 }
@@ -83,6 +125,7 @@ mod tests {
                     keep_dots: true,
                     keep_special_chars: true,
                     keep_unicode: true,
+                    exclude_regexes: vec![],
                 },
             },
             // When option not defined via Cli, backup to Cfg
@@ -110,6 +153,7 @@ mod tests {
                     keep_dots: false,
                     keep_special_chars: true,
                     keep_unicode: true,
+                    exclude_regexes: vec![],
                 },
             },
             // A mix of options coming from Cli and others from Cfg
@@ -137,6 +181,7 @@ mod tests {
                     keep_dots: false,
                     keep_special_chars: true,
                     keep_unicode: true,
+                    exclude_regexes: vec![],
                 },
             },
         ];
@@ -144,10 +189,36 @@ mod tests {
         for test_case in test_cases {
             let data = Data::new(test_case.cli, test_case.cfg)
                 .expect("Data::new should have succeed. There must be an error in the test case.");
+
             assert_eq!(
-                data, test_case.data,
+                data.files, test_case.data.files,
                 "Expected {:?}, but got {:?}",
-                test_case.data, data
+                data.files, test_case.data.files
+            );
+            assert_eq!(
+                data.naming_convention, test_case.data.naming_convention,
+                "Expected {:?}, but got {:?}",
+                data.naming_convention, test_case.data.naming_convention
+            );
+            assert_eq!(
+                data.recursive, test_case.data.recursive,
+                "Expected {:?}, but got {:?}",
+                data.recursive, test_case.data.recursive
+            );
+            assert_eq!(
+                data.keep_dots, test_case.data.keep_dots,
+                "Expected {:?}, but got {:?}",
+                data.keep_dots, test_case.data.keep_dots
+            );
+            assert_eq!(
+                data.keep_special_chars, test_case.data.keep_special_chars,
+                "Expected {:?}, but got {:?}",
+                data.keep_special_chars, test_case.data.keep_special_chars
+            );
+            assert_eq!(
+                data.keep_unicode, test_case.data.keep_unicode,
+                "Expected {:?}, but got {:?}",
+                data.keep_unicode, test_case.data.keep_unicode
             );
         }
     }

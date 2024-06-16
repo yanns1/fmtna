@@ -1,0 +1,30 @@
+// Programming languages
+// ---------------------
+\.rs$
+
+\.hs$
+
+\.py$
+\.pyx$
+
+\.c$
+\.cpp$
+\.cxx$
+\.h$
+\.hpp$
+\.hxx$
+
+\.html$
+\.css$
+\.js$
+\.ts$
+\.jsx$
+\.tsx$
+
+\.java$
+
+// Misc
+// ----
+^Makefile$
+^README.*$
+^LICENSE.*$

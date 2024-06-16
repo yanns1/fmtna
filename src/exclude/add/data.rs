@@ -6,7 +6,7 @@ use regex::Regex;
 
 #[derive(Debug)]
 pub struct Data {
-    pub exclude_re: Regex,
+    pub _exclude_re: Regex,
 }
 
 impl Data {
@@ -16,7 +16,9 @@ impl Data {
         let exclude_re =
             Regex::new(&cli.pattern).with_context(|| "The pattern given is not valid.")?;
 
-        Ok(Data { exclude_re })
+        Ok(Data {
+            _exclude_re: exclude_re,
+        })
     }
 }
 

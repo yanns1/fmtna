@@ -112,11 +112,32 @@ impl DefaultEngine {
 
         Ok(())
     }
+
+    fn should_exclude(&self, file: &Path) -> bool {
+        if let Some(filename) = file.file_name() {
+            let filename = filename.to_string_lossy();
+            for re in &self.data.exclude_regexes {
+                if re.is_match(&filename) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        true
+    }
 }
 
 impl Engine for DefaultEngine {
     fn run(&mut self) -> anyhow::Result<()> {
+        // TODO: Write output to a backup file as well.
+
         while let Some(f) = self.data.files.pop() {
+            if self.should_exclude(&f) {
+                continue;
+            }
+
             match self.change_stem_of_file(&f) {
                 ChangeStemResult::FileDoesntExist => {
                     let f = f.absolutize()?;
