@@ -20,7 +20,7 @@ use walkdir::WalkDir;
 
 const HELP: &str = "[s]kip : Do nothing and continue.
 [S]kip all : [s]kip for the current conflict and all further conflicts.
-[b]ackup : Move the existing file in BACKUP_DIR, then rename the file supposed to be renamed.
+[b]ackup : Move the existing file in the backup directory, then rename the file supposed to be renamed.
 [B]ackup all : [b]ackup for the current conflict and all further conflicts.
 [o]verwrite : Rename anyway, overwriting the existing file in the process (beware data loss!).
 [O]verwrite all : [o]verwrite for the current conflict and all further conflicts.";
