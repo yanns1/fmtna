@@ -83,7 +83,7 @@ impl DefaultEngine {
         }
         let parent_dir = parent_dir.unwrap();
 
-        let new_file_stem = apply_nc(
+        let mut new_filename = apply_nc(
             &self.data.naming_convention,
             file_stem,
             self.data.keep_dots,
@@ -91,8 +91,12 @@ impl DefaultEngine {
             self.data.keep_unicode,
         );
 
+        if let Some(ext) = file.extension() {
+            new_filename.push('.');
+            new_filename.push_str(&ext.to_string_lossy());
+        }
         let mut new_file = parent_dir.to_owned();
-        new_file.push(new_file_stem);
+        new_file.push(new_filename);
 
         if new_file == file {
             return ChangeStemResult::NoNeedToRename;
