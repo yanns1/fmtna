@@ -135,7 +135,7 @@ impl DefaultEngine {
         let recap_line = format!("(e) {}: {}", path, err_mess);
         println!("{}", recap_line.clone().dark_red());
         writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to backup file.")?;
+            .with_context(|| "Failed to write to history file.")?;
 
         Ok(())
     }
@@ -168,7 +168,7 @@ impl DefaultEngine {
         );
         println!("{}", recap_line.clone().dark_blue());
         writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to backup file.")?;
+            .with_context(|| "Failed to write to history file.")?;
 
         Ok(())
     }
@@ -214,7 +214,7 @@ impl DefaultEngine {
         );
         println!("{}", recap_line.clone().dark_green());
         writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to backup file.")?;
+            .with_context(|| "Failed to write to history file.")?;
 
         Ok(())
     }
@@ -234,7 +234,7 @@ impl DefaultEngine {
         );
         println!("{}", recap_line.clone().dark_yellow());
         writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to backup file.")?;
+            .with_context(|| "Failed to write to history file.")?;
 
         Ok(())
     }
@@ -343,7 +343,7 @@ impl DefaultEngine {
                 let recap_line = format!("(d) {} -> {}", path, new_path);
                 println!("{}", recap_line.clone().dark_grey());
                 writeln!(history_writer, "{}", recap_line)
-                    .with_context(|| "Failed to write to backup file.")?;
+                    .with_context(|| "Failed to write to history file.")?;
 
                 if self.data.recursive && !new_file.is_symlink() && new_file.is_dir() {
                     for entry in WalkDir::new(new_file)
