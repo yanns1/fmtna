@@ -104,6 +104,10 @@ pub fn file_is_empty(p: &Path) -> io::Result<bool> {
     fs::metadata(p).map(|metadata| metadata.len() == 0)
 }
 
+pub fn get_now_str() -> String {
+    chrono::Local::now().to_rfc3339()
+}
+
 #[cfg(test)]
 pub mod test {
     use std::path::PathBuf;

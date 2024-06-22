@@ -1,5 +1,4 @@
 use anyhow::Context;
-use chrono::Local;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
@@ -8,7 +7,7 @@ use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::naming_conventions::apply_nc;
-use crate::utils::{self, file_is_empty, get_history_dir_path, INDENT};
+use crate::utils::{self, file_is_empty, get_history_dir_path, get_now_str, INDENT};
 use core::panic;
 use crossterm::style::Stylize;
 use path_absolutize::*;
@@ -330,7 +329,7 @@ impl Engine for DefaultEngine {
         // Create a backup file
         // ^^^^^^^^^^^^^^^^^^^^
         let mut history_path = get_history_dir_path()?;
-        history_path.push(format!("{}", Local::now().format("%Y%m%d_%H%M%S%.f")));
+        history_path.push(get_now_str());
         // Don't check if already exists as it shouldn't given the very precise time used for
         // the name.
         let history_file = File::create_new(history_path.clone())?;
