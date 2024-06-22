@@ -4,8 +4,8 @@ use regex::Regex;
 
 use super::cli::DefaultArgs;
 use crate::cfg::Cfg;
-use crate::exclude::get_exclude_file_path;
 use crate::naming_conventions::NamingConvention;
+use crate::utils::get_exclude_file_path;
 use anyhow::anyhow;
 use std::fs::File;
 use std::io::{BufRead, BufReader};

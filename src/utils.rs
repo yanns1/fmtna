@@ -1,9 +1,12 @@
 use anyhow::Context;
+use clap::crate_name;
+use confy::get_configuration_file_path;
 use crossterm::cursor;
 use crossterm::terminal;
 use crossterm::ExecutableCommand;
 use std::io;
 use std::io::Write;
+use std::path::PathBuf;
 
 pub const INDENT: &str = "    ";
 
@@ -30,7 +33,7 @@ pub fn get_stdin_raw_line_input() -> anyhow::Result<String> {
 
 pub fn get_stdin_line_input(
     prompt: &str,
-    valid_inputs: &Vec<&str>,
+    valid_inputs: &[&str],
     help_input: Option<&str>,
     help_mess: Option<&str>,
     clear: bool,
@@ -78,6 +81,21 @@ pub fn get_stdin_line_input(
             n_lines_to_clear += 1;
         }
     }
+}
+
+pub fn get_exclude_file_path() -> anyhow::Result<PathBuf> {
+    let mut exclude_file_path = get_configuration_file_path(crate_name!(), crate_name!())?;
+    exclude_file_path.set_file_name("exclude.txt");
+    Ok(exclude_file_path)
+}
+
+pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
+    let mut backups_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
+        .parent()
+        .with_context(|| "Failed to get parent directory of configuration file.")?
+        .to_owned();
+    backups_dir_path.push("backups");
+    Ok(backups_dir_path)
 }
 
 #[cfg(test)]
