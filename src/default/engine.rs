@@ -7,7 +7,10 @@ use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::naming_conventions::apply_nc;
-use crate::utils::{self, file_is_empty, get_history_dir_path, get_now_str, INDENT};
+use crate::utils::{
+    file_is_empty, get_backups_dir_path, get_history_dir_path, get_now_str, get_stdin_line_input,
+    INDENT,
+};
 use core::panic;
 use crossterm::style::Stylize;
 use path_absolutize::*;
@@ -128,7 +131,7 @@ impl DefaultEngine {
             INDENT
         );
         let valid_inputs: Vec<&str> = vec![];
-        let _ = utils::get_stdin_line_input(&prompt, &valid_inputs, None, None, true)?;
+        let _ = get_stdin_line_input(&prompt, &valid_inputs, None, None, true)?;
         let recap_line = format!("(e) {}: {}", path, err_mess);
         println!("{}", recap_line.clone().dark_red());
         writeln!(history_writer, "{}", recap_line)
@@ -154,11 +157,15 @@ impl DefaultEngine {
 
     fn skip<W: Write>(
         &mut self,
-        path: &str,
-        new_path: &str,
+        path: &Path,
+        new_path: &Path,
         history_writer: &mut W,
     ) -> anyhow::Result<()> {
-        let recap_line = format!("(s) {} -> {}", path, new_path);
+        let recap_line = format!(
+            "(s) {} -> {}",
+            path.to_string_lossy(),
+            new_path.to_string_lossy()
+        );
         println!("{}", recap_line.clone().dark_blue());
         writeln!(history_writer, "{}", recap_line)
             .with_context(|| "Failed to write to backup file.")?;
@@ -168,27 +175,61 @@ impl DefaultEngine {
 
     fn backup<W: Write>(
         &mut self,
-        path: &str,
-        new_path: &str,
+        path: &Path,
+        new_path: &Path,
         history_writer: &mut W,
     ) -> anyhow::Result<()> {
-        let recap_line = format!("(b) {} -> {}", path, new_path);
+        // Figure out the backup's filename
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        let mut new_name;
+        let file_stem = new_path
+            .file_stem()
+            .with_context(|| "Expected new file to have a stem.")?;
+        new_name = format!("{}_backup_{}", file_stem.to_string_lossy(), get_now_str());
+        if let Some(extension) = new_path.extension() {
+            new_name.push('.');
+            new_name.push_str(&extension.to_string_lossy());
+        }
+        let mut backup_path = get_backups_dir_path()?;
+        backup_path.push(new_name);
+
+        // Make the backup
+        // ^^^^^^^^^^^^^^^
+        fs::rename(new_path, backup_path.clone()).with_context(|| {
+            format!(
+                "Failed to backup! Couldn't move {} to {}.",
+                new_path.display(),
+                backup_path.display()
+            )
+        })?;
+
+        fs::rename(path, new_path).with_context(|| "Failed to rename.")?;
+
+        // Report to the user
+        // ^^^^^^^^^^^^^^^^^^
+        let recap_line = format!(
+            "(b) {} -> {}",
+            path.to_string_lossy(),
+            new_path.to_string_lossy()
+        );
         println!("{}", recap_line.clone().dark_green());
         writeln!(history_writer, "{}", recap_line)
             .with_context(|| "Failed to write to backup file.")?;
-
-        // TODO:
 
         Ok(())
     }
 
     fn overwrite<W: Write>(
         &mut self,
-        path: &str,
-        new_path: &str,
+        path: &Path,
+        new_path: &Path,
         history_writer: &mut W,
     ) -> anyhow::Result<()> {
-        let recap_line = format!("(o) {} -> {}", path, new_path);
+        let recap_line = format!(
+            "(o) {} -> {}",
+            path.to_string_lossy(),
+            new_path.to_string_lossy()
+        );
         println!("{}", recap_line.clone().dark_yellow());
         writeln!(history_writer, "{}", recap_line)
             .with_context(|| "Failed to write to backup file.")?;
@@ -233,50 +274,43 @@ impl DefaultEngine {
             }
             ChangeStemResult::NewFileAlreadyExist(new_file) => {
                 let f = f.absolutize()?;
-                let path = f.to_string_lossy();
-                let new_path = new_file.to_string_lossy();
 
                 if self.always_skip {
-                    self.skip(&path, &new_path, history_writer)?;
+                    self.skip(&f, &new_file, history_writer)?;
                     return Ok(());
                 } else if self.always_backup {
-                    self.backup(&path, &new_path, history_writer)?;
+                    self.backup(&f, &new_file, history_writer)?;
                     return Ok(());
                 } else if self.always_overwrite {
-                    self.overwrite(&path, &new_path, history_writer)?;
+                    self.overwrite(&new_file, &new_file, history_writer)?;
                     return Ok(());
                 }
 
                 let err_mess = "New file already exists.";
                 let prompt = format!(
                     "(?) {} -> {}: {}\n{}[s]kip [S]kip all [b]ackup [B]ackup all [o]verwrite [O]verwrite all [h]elp: ",
-                    path.red(),
-                    new_path.red(),
+                    f.to_string_lossy().red(),
+                    new_file.to_string_lossy().red(),
                     err_mess,
                     INDENT
                 );
                 let valid_inputs: Vec<&str> = vec!["s", "S", "b", "B", "o", "O"];
-                let input = utils::get_stdin_line_input(
-                    &prompt,
-                    &valid_inputs,
-                    Some("h"),
-                    Some(HELP),
-                    true,
-                )?;
+                let input =
+                    get_stdin_line_input(&prompt, &valid_inputs, Some("h"), Some(HELP), true)?;
                 match &input[..] {
-                    "s" => self.skip(&path, &new_path, history_writer)?,
+                    "s" => self.skip(&f, &new_file, history_writer)?,
                     "S" => {
-                        self.skip(&path, &new_path, history_writer)?;
+                        self.skip(&f, &new_file, history_writer)?;
                         self.always_skip = true;
                     }
-                    "b" => self.backup(&path, &new_path, history_writer)?,
+                    "b" => self.backup(&f, &new_file, history_writer)?,
                     "B" => {
-                        self.backup(&path, &new_path, history_writer)?;
+                        self.backup(&f, &new_file, history_writer)?;
                         self.always_backup = true;
                     }
-                    "o" => self.overwrite(&path, &new_path, history_writer)?,
+                    "o" => self.overwrite(&f, &new_file, history_writer)?,
                     "O" => {
-                        self.overwrite(&path, &new_path, history_writer)?;
+                        self.overwrite(&f, &new_file, history_writer)?;
                         self.always_overwrite = true;
                     }
                     _ => {
