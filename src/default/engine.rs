@@ -344,6 +344,9 @@ impl Engine for DefaultEngine {
             self.process_file(f, &mut history_writer)?;
         }
 
+        // Flush the BufWriter before checking if the history file is empty or not
+        history_writer.flush()?;
+
         // Remove backup file if nothing was written to it.
         // Could theorically avoid making it in the first place,
         // but too unconvenient.
