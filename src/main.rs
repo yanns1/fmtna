@@ -13,7 +13,7 @@ use crate::cfg::Cfg;
 use crate::cli::Cli;
 use crate::engine::get_engine;
 use clap::{crate_name, Parser};
-use utils::{get_backups_dir_path, get_exclude_file_path};
+use utils::{get_exclude_file_path, get_history_dir_path};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -24,9 +24,9 @@ fn main() -> anyhow::Result<()> {
         fs::copy("templates/exclude.txt", exclude_file_path)?;
     }
 
-    let backups_dir_path = get_backups_dir_path()?;
-    if !backups_dir_path.exists() {
-        fs::create_dir(backups_dir_path)?;
+    let history_dir_path = get_history_dir_path()?;
+    if !history_dir_path.exists() {
+        fs::create_dir(history_dir_path)?;
     }
 
     let mut engine = get_engine(cli, cfg)?;

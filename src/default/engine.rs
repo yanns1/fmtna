@@ -1,9 +1,14 @@
+use anyhow::Context;
+use chrono::Local;
+use std::fs::File;
+use std::io::{BufWriter, Write};
+
 use super::cli::DefaultArgs;
 use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::naming_conventions::apply_nc;
-use crate::utils::{self, INDENT};
+use crate::utils::{self, file_is_empty, get_history_dir_path, INDENT};
 use core::panic;
 use crossterm::style::Stylize;
 use path_absolutize::*;
@@ -98,7 +103,12 @@ impl DefaultEngine {
         ChangeStemResult::Ok(new_file)
     }
 
-    fn run_error_interaction(&self, f: &Path, err_mess: &str) -> anyhow::Result<()> {
+    fn run_error_interaction<W: Write>(
+        &self,
+        f: &Path,
+        err_mess: &str,
+        history_writer: &mut W,
+    ) -> anyhow::Result<()> {
         let path = f.to_string_lossy();
         let prompt = format!(
             "(?) {}: {}\n{}Enter a key to continue: ",
@@ -108,7 +118,10 @@ impl DefaultEngine {
         );
         let valid_inputs: Vec<&str> = vec![];
         let _ = utils::get_stdin_line_input(&prompt, &valid_inputs, None, None, true)?;
-        println!("{}", format!("(e) {}: {}", path, err_mess).dark_red());
+        let recap_line = format!("(e) {}: {}", path, err_mess);
+        println!("{}", recap_line.clone().dark_red());
+        writeln!(history_writer, "{}", recap_line)
+            .with_context(|| "Failed to write to backup file.")?;
 
         Ok(())
     }
@@ -131,7 +144,13 @@ impl DefaultEngine {
 
 impl Engine for DefaultEngine {
     fn run(&mut self) -> anyhow::Result<()> {
-        // TODO: Write output to a backup file as well.
+        // Create a backup file
+        let mut history_path = get_history_dir_path()?;
+        history_path.push(format!("{}", Local::now().format("%Y%m%d_%H%M%S%.f")));
+        // Don't check if already exists as it shouldn't given the very precise time used for
+        // the name.
+        let history_file = File::create_new(history_path.clone())?;
+        let mut history_writer = BufWriter::new(history_file);
 
         while let Some(f) = self.data.files.pop() {
             if self.should_exclude(&f) {
@@ -141,22 +160,38 @@ impl Engine for DefaultEngine {
             match self.change_stem_of_file(&f) {
                 ChangeStemResult::FileDoesntExist => {
                     let f = f.absolutize()?;
-                    self.run_error_interaction(&f, "File doesn't exist.")?;
+                    self.run_error_interaction(&f, "File doesn't exist.", &mut history_writer)?;
                 }
                 ChangeStemResult::FailedToRetrieveFileStem => {
                     let f = f.absolutize()?;
-                    self.run_error_interaction(&f, "Failed to find the stem.")?;
+                    self.run_error_interaction(
+                        &f,
+                        "Failed to find the stem.",
+                        &mut history_writer,
+                    )?;
                 }
                 ChangeStemResult::FileHasInvalidUnicode => {
                     let f = f.absolutize()?;
-                    self.run_error_interaction(&f, "File contains invalid unicode characters.")?;
+                    self.run_error_interaction(
+                        &f,
+                        "File contains invalid unicode characters.",
+                        &mut history_writer,
+                    )?;
                 }
                 ChangeStemResult::FailedToAbsolutizeFile(err) => {
-                    self.run_error_interaction(&f, &format!("Failed to absolutize. {}", err)[..])?;
+                    self.run_error_interaction(
+                        &f,
+                        &format!("Failed to absolutize. {}", err)[..],
+                        &mut history_writer,
+                    )?;
                 }
                 ChangeStemResult::FileHasNoParentDirectory => {
                     let f = f.absolutize()?;
-                    self.run_error_interaction(&f, "File has no parent directory.")?;
+                    self.run_error_interaction(
+                        &f,
+                        "File has no parent directory.",
+                        &mut history_writer,
+                    )?;
                 }
                 ChangeStemResult::NewFileAlreadyExist(new_file) => {
                     let f = f.absolutize()?;
@@ -180,27 +215,51 @@ impl Engine for DefaultEngine {
                     )?;
                     match &input[..] {
                         "s" => {
-                            println!("{}", format!("(s) {} -> {}", path, new_path).dark_blue());
+                            let recap_line = format!("(s) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_blue());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         "S" => {
-                            println!("{}", format!("(s) {} -> {}", path, new_path).dark_blue());
+                            let recap_line = format!("(s) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_blue());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         "b" => {
-                            println!("{}", format!("(b) {} -> {}", path, new_path).dark_green());
+                            let recap_line = format!("(b) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_green());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         "B" => {
-                            println!("{}", format!("(b) {} -> {}", path, new_path).dark_green());
+                            let recap_line = format!("(b) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_green());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         "o" => {
-                            println!("{}", format!("(o) {} -> {}", path, new_path).dark_yellow());
+                            let recap_line = format!("(o) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_yellow());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         "O" => {
-                            println!("{}", format!("(o) {} -> {}", path, new_path).dark_yellow());
+                            let recap_line = format!("(o) {} -> {}", path, new_path);
+                            println!("{}", recap_line.clone().dark_yellow());
+                            writeln!(history_writer, "{}", recap_line)
+                                .with_context(|| "Failed to write to backup file.")?;
+
                             todo!();
                         }
                         _ => {
@@ -209,7 +268,11 @@ impl Engine for DefaultEngine {
                     };
                 }
                 ChangeStemResult::FailedToRename(err) => {
-                    self.run_error_interaction(&f, &format!("Failed to rename. {}", err)[..])?;
+                    self.run_error_interaction(
+                        &f,
+                        &format!("Failed to rename. {}", err)[..],
+                        &mut history_writer,
+                    )?;
                 }
                 ChangeStemResult::NoNeedToRename => {
                     if self.data.recursive && !f.is_symlink() && f.is_dir() {
@@ -226,7 +289,11 @@ impl Engine for DefaultEngine {
                     let f = f.absolutize()?;
                     let path = f.to_string_lossy();
                     let new_path = new_file.to_string_lossy();
-                    println!("{}", format!("(d) {} -> {}", path, new_path).dark_grey());
+
+                    let recap_line = format!("(d) {} -> {}", path, new_path);
+                    println!("{}", recap_line.clone().dark_grey());
+                    writeln!(history_writer, "{}", recap_line)
+                        .with_context(|| "Failed to write to backup file.")?;
 
                     if self.data.recursive && !new_file.is_symlink() && new_file.is_dir() {
                         for entry in WalkDir::new(new_file)
@@ -239,6 +306,13 @@ impl Engine for DefaultEngine {
                     }
                 }
             }
+        }
+
+        // Remove backup file if nothing was written to it.
+        // Could theorically avoid making it in the first place,
+        // but too unconvenient.
+        if file_is_empty(&history_path)? {
+            fs::remove_file(&history_path)?;
         }
 
         Ok(())
