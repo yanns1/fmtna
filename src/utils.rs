@@ -100,6 +100,15 @@ pub fn get_history_dir_path() -> anyhow::Result<PathBuf> {
     Ok(history_dir_path)
 }
 
+pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
+    let mut backups_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
+        .parent()
+        .with_context(|| "Failed to get parent directory of configuration file.")?
+        .to_owned();
+    backups_dir_path.push("backups");
+    Ok(backups_dir_path)
+}
+
 pub fn file_is_empty(p: &Path) -> io::Result<bool> {
     fs::metadata(p).map(|metadata| metadata.len() == 0)
 }
