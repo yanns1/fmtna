@@ -29,6 +29,9 @@ pub fn get_engine(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>>
 
 struct DefaultEngine {
     data: Data,
+    always_skip: bool,
+    always_backup: bool,
+    always_overwrite: bool,
 }
 
 #[derive(Debug)]
@@ -47,7 +50,12 @@ enum ChangeStemResult {
 impl DefaultEngine {
     pub fn new(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Self> {
         let data = Data::new(cli, cfg)?;
-        Ok(Self { data })
+        Ok(Self {
+            data,
+            always_skip: false,
+            always_backup: false,
+            always_overwrite: false,
+        })
     }
 
     fn change_stem_of_file(&self, file: &Path) -> ChangeStemResult {
@@ -141,6 +149,54 @@ impl DefaultEngine {
         true
     }
 
+    fn skip<W: Write>(
+        &mut self,
+        path: &str,
+        new_path: &str,
+        history_writer: &mut W,
+    ) -> anyhow::Result<()> {
+        let recap_line = format!("(s) {} -> {}", path, new_path);
+        println!("{}", recap_line.clone().dark_blue());
+        writeln!(history_writer, "{}", recap_line)
+            .with_context(|| "Failed to write to backup file.")?;
+
+        // TODO:
+
+        Ok(())
+    }
+
+    fn backup<W: Write>(
+        &mut self,
+        path: &str,
+        new_path: &str,
+        history_writer: &mut W,
+    ) -> anyhow::Result<()> {
+        let recap_line = format!("(b) {} -> {}", path, new_path);
+        println!("{}", recap_line.clone().dark_green());
+        writeln!(history_writer, "{}", recap_line)
+            .with_context(|| "Failed to write to backup file.")?;
+
+        // TODO:
+
+        Ok(())
+    }
+
+    fn overwrite<W: Write>(
+        &mut self,
+        path: &str,
+        new_path: &str,
+        history_writer: &mut W,
+    ) -> anyhow::Result<()> {
+        let recap_line = format!("(o) {} -> {}", path, new_path);
+        println!("{}", recap_line.clone().dark_yellow());
+        writeln!(history_writer, "{}", recap_line)
+            .with_context(|| "Failed to write to backup file.")?;
+
+        // TODO:
+
+        Ok(())
+    }
+
     fn process_file<W: Write>(&mut self, f: PathBuf, history_writer: &mut W) -> anyhow::Result<()> {
         if self.should_exclude(&f) {
             return Ok(());
@@ -178,6 +234,18 @@ impl DefaultEngine {
                 let f = f.absolutize()?;
                 let path = f.to_string_lossy();
                 let new_path = new_file.to_string_lossy();
+
+                if self.always_skip {
+                    self.skip(&path, &new_path, history_writer)?;
+                    return Ok(());
+                } else if self.always_backup {
+                    self.backup(&path, &new_path, history_writer)?;
+                    return Ok(());
+                } else if self.always_overwrite {
+                    self.overwrite(&path, &new_path, history_writer)?;
+                    return Ok(());
+                }
+
                 let err_mess = "New file already exists.";
                 let prompt = format!(
                     "(?) {} -> {}: {}\n{}[s]kip [S]kip all [b]ackup [B]ackup all [o]verwrite [O]verwrite all [h]elp: ",
@@ -195,53 +263,20 @@ impl DefaultEngine {
                     true,
                 )?;
                 match &input[..] {
-                    "s" => {
-                        let recap_line = format!("(s) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_blue());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
-                    }
+                    "s" => self.skip(&path, &new_path, history_writer)?,
                     "S" => {
-                        let recap_line = format!("(s) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_blue());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
+                        self.skip(&path, &new_path, history_writer)?;
+                        self.always_skip = true;
                     }
-                    "b" => {
-                        let recap_line = format!("(b) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_green());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
-                    }
+                    "b" => self.backup(&path, &new_path, history_writer)?,
                     "B" => {
-                        let recap_line = format!("(b) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_green());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
+                        self.backup(&path, &new_path, history_writer)?;
+                        self.always_backup = true;
                     }
-                    "o" => {
-                        let recap_line = format!("(o) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_yellow());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
-                    }
+                    "o" => self.overwrite(&path, &new_path, history_writer)?,
                     "O" => {
-                        let recap_line = format!("(o) {} -> {}", path, new_path);
-                        println!("{}", recap_line.clone().dark_yellow());
-                        writeln!(history_writer, "{}", recap_line)
-                            .with_context(|| "Failed to write to backup file.")?;
-
-                        todo!();
+                        self.overwrite(&path, &new_path, history_writer)?;
+                        self.always_overwrite = true;
                     }
                     _ => {
                         panic!("utils::get_stdin_line_input didn't do what it is supposed to!")
