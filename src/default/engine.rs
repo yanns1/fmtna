@@ -160,8 +160,6 @@ impl DefaultEngine {
         writeln!(history_writer, "{}", recap_line)
             .with_context(|| "Failed to write to backup file.")?;
 
-        // TODO:
-
         Ok(())
     }
 
