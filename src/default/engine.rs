@@ -131,7 +131,7 @@ impl DefaultEngine {
             INDENT
         );
         let valid_inputs: Vec<&str> = vec![];
-        let _ = get_stdin_line_input(&prompt, &valid_inputs, None, None, true)?;
+        let _ = get_stdin_line_input(&prompt, &valid_inputs, None, None)?;
         let recap_line = format!("(e) {}: {}", path, err_mess);
         println!("{}", recap_line.clone().dark_red());
         writeln!(history_writer, "{}", recap_line)
@@ -295,8 +295,7 @@ impl DefaultEngine {
                     INDENT
                 );
                 let valid_inputs: Vec<&str> = vec!["s", "S", "b", "B", "o", "O"];
-                let input =
-                    get_stdin_line_input(&prompt, &valid_inputs, Some("h"), Some(HELP), true)?;
+                let input = get_stdin_line_input(&prompt, &valid_inputs, Some("h"), Some(HELP))?;
                 match &input[..] {
                     "s" => self.skip(&f, &new_file, history_writer)?,
                     "S" => {
