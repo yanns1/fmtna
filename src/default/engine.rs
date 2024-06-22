@@ -225,6 +225,8 @@ impl DefaultEngine {
         new_path: &Path,
         history_writer: &mut W,
     ) -> anyhow::Result<()> {
+        fs::rename(path, new_path).with_context(|| "Failed to rename.")?;
+
         let recap_line = format!(
             "(o) {} -> {}",
             path.to_string_lossy(),
@@ -233,8 +235,6 @@ impl DefaultEngine {
         println!("{}", recap_line.clone().dark_yellow());
         writeln!(history_writer, "{}", recap_line)
             .with_context(|| "Failed to write to backup file.")?;
-
-        // TODO:
 
         Ok(())
     }
