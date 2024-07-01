@@ -8,8 +8,8 @@ use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::naming_conventions::apply_nc;
 use crate::utils::{
-    file_is_empty, get_backups_dir_path, get_history_dir_path, get_now_str, get_stdin_line_input,
-    INDENT,
+    backup, file_is_empty, get_history_dir_path, get_now_str, get_stdin_line_input, overwrite,
+    run_error_interaction, skip, CONFLICT_HELP, INDENT,
 };
 use core::panic;
 use crossterm::style::Stylize;
@@ -17,13 +17,6 @@ use path_absolutize::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-
-const HELP: &str = "[s]kip : Do nothing and continue.
-[S]kip all : [s]kip for the current conflict and all further conflicts.
-[b]ackup : Move the existing file in the backup directory, then rename the file supposed to be renamed.
-[B]ackup all : [b]ackup for the current conflict and all further conflicts.
-[o]verwrite : Rename anyway, overwriting the existing file in the process (beware data loss!).
-[O]verwrite all : [o]verwrite for the current conflict and all further conflicts.";
 
 pub fn get_engine(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(DefaultEngine::new(cli, cfg)?))
@@ -117,29 +110,6 @@ impl DefaultEngine {
         ChangeStemResult::Ok(new_file)
     }
 
-    fn run_error_interaction<W: Write>(
-        &self,
-        f: &Path,
-        err_mess: &str,
-        history_writer: &mut W,
-    ) -> anyhow::Result<()> {
-        let path = f.to_string_lossy();
-        let prompt = format!(
-            "(?) {}: {}\n{}Enter a key to continue: ",
-            path.red(),
-            err_mess,
-            INDENT
-        );
-        let valid_inputs: Vec<&str> = vec![];
-        let _ = get_stdin_line_input(&prompt, &valid_inputs, None, None)?;
-        let recap_line = format!("(e) {}: {}", path, err_mess);
-        println!("{}", recap_line.clone().dark_red());
-        writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to history file.")?;
-
-        Ok(())
-    }
-
     fn should_exclude(&self, file: &Path) -> bool {
         if let Some(filename) = file.file_name() {
             let filename = filename.to_string_lossy();
@@ -155,90 +125,6 @@ impl DefaultEngine {
         true
     }
 
-    fn skip<W: Write>(
-        &mut self,
-        path: &Path,
-        new_path: &Path,
-        history_writer: &mut W,
-    ) -> anyhow::Result<()> {
-        let recap_line = format!(
-            "(s) {} -> {}",
-            path.to_string_lossy(),
-            new_path.to_string_lossy()
-        );
-        println!("{}", recap_line.clone().dark_blue());
-        writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to history file.")?;
-
-        Ok(())
-    }
-
-    fn backup<W: Write>(
-        &mut self,
-        path: &Path,
-        new_path: &Path,
-        history_writer: &mut W,
-    ) -> anyhow::Result<()> {
-        // Figure out the backup's filename
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        let mut new_name;
-        let file_stem = new_path
-            .file_stem()
-            .with_context(|| "Expected new file to have a stem.")?;
-        new_name = format!("{}_backup_{}", file_stem.to_string_lossy(), get_now_str());
-        if let Some(extension) = new_path.extension() {
-            new_name.push('.');
-            new_name.push_str(&extension.to_string_lossy());
-        }
-        let mut backup_path = get_backups_dir_path()?;
-        backup_path.push(new_name);
-
-        // Make the backup
-        // ^^^^^^^^^^^^^^^
-        fs::rename(new_path, backup_path.clone()).with_context(|| {
-            format!(
-                "Failed to backup! Couldn't move {} to {}.",
-                new_path.display(),
-                backup_path.display()
-            )
-        })?;
-
-        fs::rename(path, new_path).with_context(|| "Failed to rename.")?;
-
-        // Report to the user
-        // ^^^^^^^^^^^^^^^^^^
-        let recap_line = format!(
-            "(b) {} -> {}",
-            path.to_string_lossy(),
-            new_path.to_string_lossy()
-        );
-        println!("{}", recap_line.clone().dark_green());
-        writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to history file.")?;
-
-        Ok(())
-    }
-
-    fn overwrite<W: Write>(
-        &mut self,
-        path: &Path,
-        new_path: &Path,
-        history_writer: &mut W,
-    ) -> anyhow::Result<()> {
-        fs::rename(path, new_path).with_context(|| "Failed to rename.")?;
-
-        let recap_line = format!(
-            "(o) {} -> {}",
-            path.to_string_lossy(),
-            new_path.to_string_lossy()
-        );
-        println!("{}", recap_line.clone().dark_yellow());
-        writeln!(history_writer, "{}", recap_line)
-            .with_context(|| "Failed to write to history file.")?;
-
-        Ok(())
-    }
-
     fn process_file<W: Write>(&mut self, f: PathBuf, history_writer: &mut W) -> anyhow::Result<()> {
         if self.should_exclude(&f) {
             return Ok(());
@@ -247,22 +133,22 @@ impl DefaultEngine {
         match self.change_stem_of_file(&f) {
             ChangeStemResult::FileDoesntExist => {
                 let f = f.absolutize()?;
-                self.run_error_interaction(&f, "File doesn't exist.", history_writer)?;
+                run_error_interaction(&f, "File doesn't exist.", history_writer)?;
             }
             ChangeStemResult::FailedToRetrieveFileStem => {
                 let f = f.absolutize()?;
-                self.run_error_interaction(&f, "Failed to find the stem.", history_writer)?;
+                run_error_interaction(&f, "Failed to find the stem.", history_writer)?;
             }
             ChangeStemResult::FileHasInvalidUnicode => {
                 let f = f.absolutize()?;
-                self.run_error_interaction(
+                run_error_interaction(
                     &f,
                     "File contains invalid unicode characters.",
                     history_writer,
                 )?;
             }
             ChangeStemResult::FailedToAbsolutizeFile(err) => {
-                self.run_error_interaction(
+                run_error_interaction(
                     &f,
                     &format!("Failed to absolutize. {}", err)[..],
                     history_writer,
@@ -270,19 +156,19 @@ impl DefaultEngine {
             }
             ChangeStemResult::FileHasNoParentDirectory => {
                 let f = f.absolutize()?;
-                self.run_error_interaction(&f, "File has no parent directory.", history_writer)?;
+                run_error_interaction(&f, "File has no parent directory.", history_writer)?;
             }
             ChangeStemResult::NewFileAlreadyExist(new_file) => {
                 let f = f.absolutize()?;
 
                 if self.always_skip {
-                    self.skip(&f, &new_file, history_writer)?;
+                    skip(&f, &new_file, history_writer)?;
                     return Ok(());
                 } else if self.always_backup {
-                    self.backup(&f, &new_file, history_writer)?;
+                    backup(&f, &new_file, history_writer)?;
                     return Ok(());
                 } else if self.always_overwrite {
-                    self.overwrite(&new_file, &new_file, history_writer)?;
+                    overwrite(&new_file, &new_file, history_writer)?;
                     return Ok(());
                 }
 
@@ -295,21 +181,22 @@ impl DefaultEngine {
                     INDENT
                 );
                 let valid_inputs: Vec<&str> = vec!["s", "S", "b", "B", "o", "O"];
-                let input = get_stdin_line_input(&prompt, &valid_inputs, Some("h"), Some(HELP))?;
+                let input =
+                    get_stdin_line_input(&prompt, &valid_inputs, Some("h"), Some(CONFLICT_HELP))?;
                 match &input[..] {
-                    "s" => self.skip(&f, &new_file, history_writer)?,
+                    "s" => skip(&f, &new_file, history_writer)?,
                     "S" => {
-                        self.skip(&f, &new_file, history_writer)?;
+                        skip(&f, &new_file, history_writer)?;
                         self.always_skip = true;
                     }
-                    "b" => self.backup(&f, &new_file, history_writer)?,
+                    "b" => backup(&f, &new_file, history_writer)?,
                     "B" => {
-                        self.backup(&f, &new_file, history_writer)?;
+                        backup(&f, &new_file, history_writer)?;
                         self.always_backup = true;
                     }
-                    "o" => self.overwrite(&f, &new_file, history_writer)?,
+                    "o" => overwrite(&f, &new_file, history_writer)?,
                     "O" => {
-                        self.overwrite(&f, &new_file, history_writer)?;
+                        overwrite(&f, &new_file, history_writer)?;
                         self.always_overwrite = true;
                     }
                     _ => {
@@ -318,7 +205,7 @@ impl DefaultEngine {
                 };
             }
             ChangeStemResult::FailedToRename(err) => {
-                self.run_error_interaction(
+                run_error_interaction(
                     &f,
                     &format!("Failed to rename. {}", err)[..],
                     history_writer,
