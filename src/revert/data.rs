@@ -5,19 +5,19 @@ use std::path::PathBuf;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Data {
-    pub backup_file: PathBuf,
+    pub history_file: PathBuf,
 }
 
 impl Data {
     pub fn new(cli: RevertCli, cfg: Cfg) -> anyhow::Result<Self> {
         let _ = cfg;
 
-        if !cli.backup_file.exists() {
-            return Err(anyhow!(format!("{:?} does not exist.", cli.backup_file)));
+        if !cli.history_file.exists() {
+            return Err(anyhow!(format!("{:?} does not exist.", cli.history_file)));
         }
 
         Ok(Data {
-            backup_file: cli.backup_file,
+            history_file: cli.history_file,
         })
     }
 }
@@ -64,7 +64,7 @@ mod tests {
             // Cli takes precedence
             TestCase {
                 cli: RevertCli {
-                    backup_file: backup_file.clone(),
+                    history_file: backup_file.clone(),
                 },
                 cfg: Cfg {
                     naming_convention: NamingConvention::SnakeCase,
@@ -75,7 +75,7 @@ mod tests {
                     editor: String::from("vi"),
                 },
                 data: Data {
-                    backup_file: backup_file.clone(),
+                    history_file: backup_file.clone(),
                 },
             },
         ];
@@ -97,7 +97,7 @@ mod tests {
         backup_file.push("inexistant_backup_file");
 
         let cli = RevertCli {
-            backup_file: backup_file.clone(),
+            history_file: backup_file.clone(),
         };
         let cfg = Cfg {
             naming_convention: NamingConvention::SnakeCase,

@@ -11,19 +11,16 @@ use clap::Args;
 /// or have unexpected consequences.
 ///
 /// fmtna automatically backs up the filename changes in
-/// a file (in your config directory) each time it runs.
-/// The contents of the backup file is exactly the output printed
-/// to the terminal.
+/// a file (in your config directory, in fmtna/history) each time
+/// it runs.
 /// You can go back to this file in case something went wrong,
 /// modify it if desired and give it as argument to this
 /// subcommand.
-/// You can even make a file on your own provided it has the
-/// right format, but you shouldn't have to do this.
 ///
 /// A revert operation can also go wrong, so a "second-order" backup
 /// file will automatically be created in your config directory.
 pub struct RevertCli {
     #[clap(verbatim_doc_comment)]
     /// The file specifying the filename changes to revert.
-    pub backup_file: PathBuf,
+    pub history_file: PathBuf,
 }
