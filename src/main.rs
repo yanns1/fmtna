@@ -4,6 +4,7 @@ mod default;
 mod engine;
 mod exclude;
 mod naming_conventions;
+mod prompt;
 mod revert;
 mod utils;
 

@@ -8,65 +8,6 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub const INDENT: &str = "    ";
-
-pub const CONFLICT_HELP: &str = "[s]kip : Do nothing and continue.
-[S]kip all : [s]kip for the current conflict and all further conflicts.
-[b]ackup : Move the existing file in the backup directory, then rename the file supposed to be renamed.
-[B]ackup all : [b]ackup for the current conflict and all further conflicts.
-[o]verwrite : Rename anyway, overwriting the existing file in the process (beware data loss!).
-[O]verwrite all : [o]verwrite for the current conflict and all further conflicts.";
-
-pub fn get_stdin_raw_line_input() -> anyhow::Result<String> {
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .with_context(|| "Error reading stdin input.")?;
-    // Need this because the newline of Enter is included in the input
-    input.truncate(input.len() - 1);
-
-    Ok(input)
-}
-
-pub fn get_stdin_line_input(
-    prompt: &str,
-    valid_inputs: &[&str],
-    help_input: Option<&str>,
-    help_mess: Option<&str>,
-) -> anyhow::Result<String> {
-    let has_help = help_input.is_some() && help_mess.is_some();
-    let help_input = help_input.unwrap_or("");
-    let help_mess = help_mess.unwrap_or("");
-
-    loop {
-        print!("{}", prompt);
-        io::stdout().flush()?;
-        let input = get_stdin_raw_line_input()?;
-
-        if valid_inputs.is_empty() {
-            return Ok(input);
-        } else if let Some(pos) = valid_inputs.iter().position(|&i| i == input) {
-            return Ok(valid_inputs[pos].to_owned());
-        } else if has_help && input == help_input {
-            println!("{INDENT}----------");
-            for line in help_mess.lines() {
-                println!("{INDENT}{}", line);
-            }
-            println!("{INDENT}----------");
-        } else {
-            let mut help_key = String::from("");
-            if has_help {
-                help_key = format!(", {}", help_input);
-            }
-            println!(
-                "{INDENT}Wrong input! Valid inputs are: {}{}. Try again.",
-                valid_inputs.join(", "),
-                help_key,
-            );
-        }
-    }
-}
-
 pub fn get_exclude_file_path() -> anyhow::Result<PathBuf> {
     let mut exclude_file_path = get_configuration_file_path(crate_name!(), crate_name!())?;
     exclude_file_path.set_file_name("exclude.txt");
@@ -97,28 +38,6 @@ pub fn file_is_empty(p: &Path) -> io::Result<bool> {
 
 pub fn get_now_str() -> String {
     chrono::Local::now().to_rfc3339()
-}
-
-pub fn run_error_interaction<W: Write>(
-    f: &Path,
-    err_mess: &str,
-    history_writer: &mut W,
-) -> anyhow::Result<()> {
-    let path = f.to_string_lossy();
-    let prompt = format!(
-        "(?) {}: {}\n{}Enter a key to continue: ",
-        path.red(),
-        err_mess,
-        INDENT
-    );
-    let valid_inputs: Vec<&str> = vec![];
-    let _ = get_stdin_line_input(&prompt, &valid_inputs, None, None)?;
-    let recap_line = format!("(e) {}: {}", path, err_mess);
-    println!("{}", recap_line.clone().dark_red());
-    writeln!(history_writer, "{}", recap_line)
-        .with_context(|| "Failed to write to history file.")?;
-
-    Ok(())
 }
 
 pub fn skip<W: Write>(path: &Path, new_path: &Path, history_writer: &mut W) -> anyhow::Result<()> {
