@@ -8,8 +8,9 @@ pub struct Data {
 
 impl Data {
     pub fn new(cli: EditCli, cfg: Cfg) -> anyhow::Result<Self> {
-        let editor: String = cli.editor.unwrap_or(cfg.editor);
-        Ok(Data { editor })
+        Ok(Data {
+            editor: cli.editor.unwrap_or(cfg.editor),
+        })
     }
 }
 
