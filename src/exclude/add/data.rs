@@ -6,18 +6,17 @@ use regex::Regex;
 
 #[derive(Debug)]
 pub struct Data {
-    pub _exclude_re: Regex,
+    pub exclude_pattern: String,
 }
 
 impl Data {
     pub fn new(cli: AddCli, cfg: Cfg) -> anyhow::Result<Self> {
         let _ = cfg;
 
-        let exclude_re =
-            Regex::new(&cli.pattern).with_context(|| "The pattern given is not valid.")?;
+        Regex::new(&cli.pattern).with_context(|| "The pattern given is not valid.")?;
 
         Ok(Data {
-            _exclude_re: exclude_re,
+            exclude_pattern: cli.pattern,
         })
     }
 }
