@@ -22,12 +22,11 @@ use std::fmt::Debug;
 /// or consequences (some files are expected to have the name they have
 /// and not something else!).
 /// fmtna's solves these problems by:
-///     1. Stopping you from executing the program as root.
-///     2. Asking you what to do when conflicts happen (the program
+///     1. Asking you what to do when conflicts happen (the program
 ///        wants to change a path to an already existing path).
-///     3. Backing up the filename changes and allowing you to revert
+///     2. Backing up the filename changes and allowing you to revert
 ///        the changes partially or completely.
-///     4. Giving you ways to exclude some filenames from formatting.
+///     3. Giving you ways to exclude some filenames from formatting.
 /// Still, fmtna can't stop you from shooting yourself in the foot.
 /// It can go as far as corrupting your system.
 pub struct Cli {
