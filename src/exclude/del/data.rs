@@ -7,7 +7,7 @@ use crate::cfg::Cfg;
 /// specified at the CLI level.
 #[derive(Debug)]
 pub struct Data {
-    pub _pattern: String,
+    pub exclude_pattern: String,
 }
 
 impl Data {
@@ -15,7 +15,7 @@ impl Data {
         let _ = cfg;
 
         Ok(Data {
-            _pattern: cli.pattern,
+            exclude_pattern: cli.pattern,
         })
     }
 }
