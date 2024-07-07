@@ -1,6 +1,6 @@
 [package]
 name = "fmtna"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Yann Salmon"]
 description = "A CLI app to format filenames according to a chosen naming convention."
