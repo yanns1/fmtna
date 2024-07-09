@@ -13,7 +13,8 @@ Supported naming conventions are:
 - lowercase
 - UPPERCASE
 
-It should be cross-platform, but has only been tested on Linux (more specifically Linux Mint 21.2) and Windows 11.
+It should be cross-platform, but has only been tested on Linux (more specifically Linux Mint 21.2).
+It has also been tested on Windows 11, and it _does not_ work.
 
 ## Contents
 
@@ -137,3 +138,4 @@ Options:
 - More tests
 - User-defined naming convention?
   Have the user write its own Rust module, include it in fmtna (build script is probably the way to go) then recompile.
+- Fix bugs on Windows.
