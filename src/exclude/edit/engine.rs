@@ -26,16 +26,31 @@ impl Engine for EditEngine {
     fn run(&mut self) -> anyhow::Result<()> {
         let exclude_file_path = get_exclude_file_path()?;
 
-        let status = Command::new(self.data.editor.clone())
-            .arg(exclude_file_path.clone())
-            .status()
-            .with_context(|| {
-                format!(
-                    "Failed to run '{} {}'.",
-                    self.data.editor,
-                    exclude_file_path.to_string_lossy()
-                )
-            })?;
+        let status = if cfg!(windows) {
+            Command::new("cmd")
+                .arg("/c")
+                .arg(self.data.editor.clone())
+                .arg(exclude_file_path.clone())
+                .status()
+                .with_context(|| {
+                    format!(
+                        "Failed to run '{} {}'.",
+                        self.data.editor,
+                        exclude_file_path.to_string_lossy()
+                    )
+                })?
+        } else {
+            Command::new(self.data.editor.clone())
+                .arg(exclude_file_path.clone())
+                .status()
+                .with_context(|| {
+                    format!(
+                        "Failed to run '{} {}'.",
+                        self.data.editor,
+                        exclude_file_path.to_string_lossy()
+                    )
+                })?
+        };
 
         if !status.success() {
             return Err(anyhow!(
