@@ -32,6 +32,15 @@ pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
     Ok(backups_dir_path)
 }
 
+pub fn trim_newline(s: &mut String) {
+    if s.ends_with('\n') {
+        s.pop();
+        if s.ends_with('\r') {
+            s.pop();
+        }
+    }
+}
+
 pub fn file_is_empty(p: &Path) -> io::Result<bool> {
     fs::metadata(p).map(|metadata| metadata.len() == 0)
 }

@@ -1,3 +1,4 @@
+use crate::utils::trim_newline;
 use anyhow::Context;
 use crossterm::style::Stylize;
 use std::io;
@@ -18,7 +19,7 @@ fn get_stdin_line_input() -> anyhow::Result<String> {
         .read_line(&mut input)
         .with_context(|| "Error reading stdin input.")?;
     // Need this because the newline of Enter is included in the input
-    input.truncate(input.len() - 1);
+    trim_newline(&mut input);
 
     Ok(input)
 }
