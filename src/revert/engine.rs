@@ -81,6 +81,11 @@ impl Engine for RevertEngine {
                 continue;
             }
 
+            // because paths are case-insensitive on Windows
+            if cfg!(windows) && from_str.to_lowercase() == to_str.to_lowercase() {
+                continue;
+            }
+
             if !to.exists() {
                 error_prompt(&to_str, "File doesn't exist.")?;
                 continue;

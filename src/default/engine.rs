@@ -84,6 +84,11 @@ impl DefaultEngine {
             self.data.keep_unicode,
         );
 
+        // because paths are case-insensitive on Windows
+        if cfg!(windows) && new_filename.to_lowercase() == file_stem.to_lowercase() {
+            return ChangeStemResult::NoNeedToRename;
+        }
+
         if let Some(ext) = file.extension() {
             new_filename.push('.');
             new_filename.push_str(&ext.to_string_lossy());
