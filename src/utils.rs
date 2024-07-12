@@ -37,7 +37,7 @@ pub fn file_is_empty(p: &Path) -> io::Result<bool> {
 }
 
 pub fn get_now_str() -> String {
-    chrono::Local::now().to_rfc3339()
+    chrono::Local::now().format("%Y%m%d_%H%M%S%.9f").to_string()
 }
 
 pub fn skip<W: Write>(path: &Path, new_path: &Path, history_writer: &mut W) -> anyhow::Result<()> {
