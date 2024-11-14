@@ -52,8 +52,8 @@ pub struct DefaultArgs {
 
     /// Keep Unicode (more precisely, non-ASCII) characters.
     ///
-    /// When not set, unicode characters to their closest ASCII counterparts
-    /// using https://crates.io/crates/unidecode.
+    /// When not set, convert unicode characters to their closest ASCII
+    /// counterparts using <https://crates.io/crates/unidecode>.
     #[clap(verbatim_doc_comment)]
     #[arg(long)]
     pub keep_unicode: bool,

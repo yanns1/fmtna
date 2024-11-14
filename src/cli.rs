@@ -15,12 +15,11 @@ use std::fmt::Debug;
 /// Format filenames according to a chosen naming convention.
 ///
 /// For each file/path (of any kind) given as argument, change the filename
-/// (i.e. the base of the path) according to the naming convention selected.
+/// (i.e. the base of the path) according to the selected naming convention.
 ///
 /// WARNING! This program is dangerous.
-/// Changing filenames is error prone and may cause undesired overwrites
-/// or consequences (some files are expected to have the name they have
-/// and not something else!).
+/// Changing filenames is error prone and may cause undesired consequences
+/// (some files are expected to have the name they have /// and not something else!).
 /// fmtna's solves these problems by:
 ///     1. Asking you what to do when conflicts happen (the program
 ///        wants to change a path to an already existing path).
