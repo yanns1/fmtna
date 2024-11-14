@@ -1,20 +1,10 @@
-mod cfg;
-mod cli;
-mod default;
-mod engine;
-mod exclude;
-mod naming_conventions;
-mod prompt;
-mod revert;
-mod utils;
-
 use std::fs;
 
-use crate::cfg::Cfg;
-use crate::cli::Cli;
-use crate::engine::get_engine;
 use clap::{crate_name, Parser};
-use utils::{get_backups_dir_path, get_exclude_file_path, get_history_dir_path};
+use fmtna::cfg::Cfg;
+use fmtna::cli::Cli;
+use fmtna::engine::get_engine;
+use fmtna::utils::{get_backups_dir_path, get_exclude_file_path, get_history_dir_path};
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
