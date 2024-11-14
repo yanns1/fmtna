@@ -53,7 +53,7 @@ Clone this repo and run `./install.sh` from the root of the repo (you might need
 
 Everything is explained in `fmtna --help`.
 
-```
+```text
 Format filenames according to a chosen naming convention.
 
 For each file/path (of any kind) given as argument, change the filename
