@@ -25,20 +25,19 @@ pub fn get_engine(cli: RevertCli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
 
 struct RevertEngine {
     data: Data,
-    always_skip: bool,
-    always_backup: bool,
-    always_overwrite: bool,
+    action: Option<Action>,
+}
+
+enum Action {
+    Skip,
+    Backup,
+    Overwrite,
 }
 
 impl RevertEngine {
     pub fn new(cli: RevertCli, cfg: Cfg) -> anyhow::Result<Self> {
         let data = Data::new(cli, cfg)?;
-        Ok(Self {
-            data,
-            always_skip: false,
-            always_backup: false,
-            always_overwrite: false,
-        })
+        Ok(Self { data, action: None })
     }
 }
 
@@ -92,34 +91,38 @@ impl Engine for RevertEngine {
             }
 
             if from.exists() {
-                if self.always_skip {
-                    skip(&to, &from, &mut history_writer)?;
-                } else if self.always_backup {
-                    backup(&to, &from, &mut history_writer)?;
-                } else if self.always_overwrite {
-                    overwrite(&to, &from, &mut history_writer)?;
+                if let Some(ref action) = self.action {
+                    match action {
+                        Action::Skip => skip(&to, &from, &mut history_writer)?,
+                        Action::Backup => backup(&to, &from, &mut history_writer)?,
+                        Action::Overwrite => overwrite(&to, &from, &mut history_writer)?,
+                    }
+                    continue;
                 }
 
                 match already_exist_prompt(&to_str, &from_str)? {
-                    AlreadyExistPromptOptions::Skip => skip(&to, &from, &mut history_writer)?,
+                    AlreadyExistPromptOptions::Skip => {
+                        skip(&to, &from, &mut history_writer)?;
+                    }
                     AlreadyExistPromptOptions::AlwaysSkip => {
                         skip(&to, &from, &mut history_writer)?;
-                        self.always_skip = true;
+                        self.action = Some(Action::Skip);
                     }
-                    AlreadyExistPromptOptions::Backup => backup(&to, &from, &mut history_writer)?,
+                    AlreadyExistPromptOptions::Backup => {
+                        backup(&to, &from, &mut history_writer)?;
+                    }
                     AlreadyExistPromptOptions::AlwaysBackup => {
                         backup(&to, &from, &mut history_writer)?;
-                        self.always_backup = true;
+                        self.action = Some(Action::Backup);
                     }
                     AlreadyExistPromptOptions::Overwrite => {
-                        overwrite(&to, &from, &mut history_writer)?
+                        overwrite(&to, &from, &mut history_writer)?;
                     }
                     AlreadyExistPromptOptions::AlwaysOverwrite => {
                         overwrite(&to, &from, &mut history_writer)?;
-                        self.always_overwrite = true;
+                        self.action = Some(Action::Overwrite);
                     }
                 };
-
                 continue;
             }
 

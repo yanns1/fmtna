@@ -21,9 +21,13 @@ pub fn get_engine(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>>
 
 struct DefaultEngine {
     data: Data,
-    always_skip: bool,
-    always_backup: bool,
-    always_overwrite: bool,
+    action: Option<Action>,
+}
+
+enum Action {
+    Skip,
+    Backup,
+    Overwrite,
 }
 
 #[derive(Debug)]
@@ -42,12 +46,7 @@ enum ChangeStemResult {
 impl DefaultEngine {
     pub fn new(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Self> {
         let data = Data::new(cli, cfg)?;
-        Ok(Self {
-            data,
-            always_skip: false,
-            always_backup: false,
-            always_overwrite: false,
-        })
+        Ok(Self { data, action: None })
     }
 
     fn change_stem_of_file(&self, file: &Path) -> ChangeStemResult {
@@ -195,34 +194,38 @@ impl DefaultEngine {
             ChangeStemResult::NewFileAlreadyExist(new_f) => {
                 let f = f.absolutize()?;
 
-                if self.always_skip {
-                    skip(&f, &new_f, history_writer)?;
-                    return Ok(());
-                } else if self.always_backup {
-                    backup(&f, &new_f, history_writer)?;
-                    return Ok(());
-                } else if self.always_overwrite {
-                    overwrite(&new_f, &new_f, history_writer)?;
+                if let Some(ref action) = self.action {
+                    match action {
+                        Action::Skip => skip(&f, &new_f, history_writer)?,
+                        Action::Backup => backup(&f, &new_f, history_writer)?,
+                        Action::Overwrite => overwrite(&new_f, &new_f, history_writer)?,
+                    }
                     return Ok(());
                 }
 
                 let f_str = f.to_string_lossy();
                 let new_f_str = new_f.to_string_lossy();
                 match already_exist_prompt(&f_str, &new_f_str)? {
-                    AlreadyExistPromptOptions::Skip => skip(&f, &new_f, history_writer)?,
+                    AlreadyExistPromptOptions::Skip => {
+                        skip(&f, &new_f, history_writer)?;
+                    }
                     AlreadyExistPromptOptions::AlwaysSkip => {
                         skip(&f, &new_f, history_writer)?;
-                        self.always_skip = true;
+                        self.action = Some(Action::Skip);
                     }
-                    AlreadyExistPromptOptions::Backup => backup(&f, &new_f, history_writer)?,
+                    AlreadyExistPromptOptions::Backup => {
+                        backup(&f, &new_f, history_writer)?;
+                    }
                     AlreadyExistPromptOptions::AlwaysBackup => {
                         backup(&f, &new_f, history_writer)?;
-                        self.always_backup = true;
+                        self.action = Some(Action::Backup);
                     }
-                    AlreadyExistPromptOptions::Overwrite => overwrite(&f, &new_f, history_writer)?,
+                    AlreadyExistPromptOptions::Overwrite => {
+                        overwrite(&f, &new_f, history_writer)?;
+                    }
                     AlreadyExistPromptOptions::AlwaysOverwrite => {
                         overwrite(&f, &new_f, history_writer)?;
-                        self.always_overwrite = true;
+                        self.action = Some(Action::Overwrite);
                     }
                 };
             }
