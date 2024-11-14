@@ -1,5 +1,11 @@
 # fmtna
 
+[![Build status](https://img.shields.io/github/actions/workflow/status/yanns1/fmtna/build_and_test.yml?style=flat-square)](https://github.com/yanns1/fmtna/actions/workflows/build_and_test.yml?query=branch%3Amain)
+[![Crates.io version](https://img.shields.io/crates/v/fmtna?style=flat-square&color=orange)](https://crates.io/crates/fmtna)
+[![Crates.io downloads](https://img.shields.io/crates/d/fmtna?style=flat-square)](https://crates.io/crates/fmtna)
+[![docs.rs docs](https://img.shields.io/badge/docs-latest-blue?style=flat-square)](https://docs.rs/fmtna)
+[![License](https://img.shields.io/badge/license-GPL%203.0-blue?style=flat-square)](https://github.com/yanns1/fmtna/blob/main/LICENSE)
+
 A CLI app to format filenames according to a chosen naming convention.
 
 This is for people that want to make their filenames as consistent as possible.
