@@ -275,8 +275,10 @@ dependencies = [
  "directories",
  "edit-distance",
  "lazy_static",
+ "linecount",
  "path-absolutize",
  "regex",
+ "rev_lines",
  "serde",
  "serial_test",
  "tempfile",
@@ -453,6 +455,12 @@ dependencies = [
  "bitflags",
  "libc",
 ]
+
+[[package]]
+name = "linecount"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5d5a4a243b9cf052d37af99679cc93b08a791f444a4a1b21bb4efcaf01847d8"
 
 [[package]]
 name = "linux-raw-sys"
@@ -634,6 +642,15 @@ name = "regex-syntax"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
+
+[[package]]
+name = "rev_lines"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed62916ac7a5ccbf13fa5e1d303029ff015600fee841756dfc134a1ac62bf05f"
+dependencies = [
+ "thiserror",
+]
 
 [[package]]
 name = "rustix"

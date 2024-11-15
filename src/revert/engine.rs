@@ -9,10 +9,12 @@ use anyhow::anyhow;
 use anyhow::Context;
 use crossterm::style::Stylize;
 use lazy_static::lazy_static;
+use linecount;
 use regex::Regex;
+use rev_lines::RevLines;
 use std::fs;
 use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
+use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
 lazy_static! {
@@ -68,9 +70,11 @@ impl Engine for RevertEngine {
         // ^^^^^^^^^^^^^
         let mut invalid_linenos: Vec<usize> = vec![];
         let file = File::open(self.data.history_file.clone())?;
-        let reader = BufReader::new(file);
-        for (line_no, line) in reader.lines().enumerate() {
-            let line_no = line_no + 1; // because start at zero, but want to start at one
+        let mut line_no = linecount::count_lines(file)? + 1;
+        let file = File::open(self.data.history_file.clone())?;
+        let rev_lines = RevLines::new(file);
+        for line in rev_lines {
+            line_no -= 1;
             let line = line?;
             if line.is_empty() || line.starts_with("//") {
                 continue;
@@ -173,6 +177,18 @@ impl Engine for RevertEngine {
         }
 
         if !invalid_linenos.is_empty() {
+            if invalid_linenos.len() == 1 {
+                return Err(anyhow!(
+                    "Ignored invalid line with line number {:?}, in {}.",
+                    invalid_linenos[0],
+                    self.data.history_file.clone().to_string_lossy()
+                ));
+            }
+
+            // Reverse so that line numbers appear in ascending order.
+            // Indeed, they are in descending order given that we iterated
+            // from the last line to the first in the history file.
+            invalid_linenos.reverse();
             return Err(anyhow!(
                 "Ignored {} invalid lines with line numbers {:?}, in {}.",
                 invalid_linenos.len(),

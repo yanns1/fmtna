@@ -24,8 +24,10 @@ crossterm = "0.27.0"
 directories = "5.0.1"
 edit-distance = "2.1.2"
 lazy_static = "1.4.0"
+linecount = "0.1.0"
 path-absolutize = { version = "3.1.1", features = ["once_cell_cache"] }
 regex = "1.10.4"
+rev_lines = "0.3.0"
 serde = { version = "1.0.202", features = ["derive"] }
 tempfile = "3.10.1"
 unidecode = "0.3.0"
