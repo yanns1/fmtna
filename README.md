@@ -35,7 +35,7 @@ It should be cross-platform, but has only been tested on Linux (more specificall
 
 - None
 
-See https://github.com/yanns1/fmtna/releases.
+See <https://github.com/yanns1/fmtna/releases>.
 
 ### Download fmtna from crates.io
 
