@@ -63,12 +63,11 @@ Everything is explained in `fmtna --help`.
 Format filenames according to a chosen naming convention.
 
 For each file/path (of any kind) given as argument, change the filename
-(i.e. the base of the path) according to the naming convention selected.
+(i.e. the base of the path) according to the selected naming convention.
 
 WARNING! This program is dangerous.
-Changing filenames is error prone and may cause undesired overwrites
-or consequences (some files are expected to have the name they have
-and not something else!).
+Changing filenames is error prone and may cause undesired consequences
+(some files are expected to have the name they have and not something else!).
 fmtna's solves these problems by:
     1. Asking you what to do when conflicts happen (the program
        wants to change a path to an already existing path).
@@ -89,21 +88,27 @@ Commands:
 Arguments:
   [FILES]...
           A list of files (of any kind) for which to format the name.
-          
+
           If no file is given, nothing will happen and the program will exit gracefully.
 
 Options:
   -n, --naming-convention <NAMING_CONVENTION>
           The naming convention to use.
-          
+
           The default is "snake_case".
           If one is specified in the config file, it will be used instead.
-          
-          [possible values: camelCase, kebab-case, snake_case, PascalCase, lower, UPPER]
+
+          Possible values:
+          - camelCase:  The camelCase naming convention
+          - kebab-case: The kebab-case naming convention
+          - snake_case: The snake_case naming convention
+          - PascalCase: The PascalCase naming convention
+          - lower:      The lowercase naming convention
+          - UPPER:      The UPPERCASE naming convention
 
   -r, --recursive
           Recursively format filenames within directories.
-          
+
           For arguments that are directories, the default is to treat them like
           any other file, that is format their names.
           By using this flag, every file (directories included) within each of
@@ -111,7 +116,7 @@ Options:
 
       --keep-dots
           Don't treat dots as separators, let them as is.
-          
+
           A separator is a character indicating a break between words.
           The characters "_", "-", "." and spaces are considered separators
           and may change according to the chosen naming convention, unless
@@ -119,7 +124,7 @@ Options:
 
       --keep-special-chars
           Keep special characters.
-          
+
           By special characters we mean characters that are neither alphanumeric
           nor separators ("_", "-", "." and spaces).
           If not set, special characters are removed with the exception of some
@@ -127,9 +132,9 @@ Options:
 
       --keep-unicode
           Keep Unicode (more precisely, non-ASCII) characters.
-          
-          When not set, unicode characters to their closest ASCII counterparts
-          using https://crates.io/crates/unidecode.
+
+          When not set, convert unicode characters to their closest ASCII
+          counterparts using <https://crates.io/crates/unidecode>.
 
   -h, --help
           Print help (see a summary with '-h')

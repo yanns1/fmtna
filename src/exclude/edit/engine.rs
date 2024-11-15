@@ -7,6 +7,17 @@ use crate::engine::Engine;
 use crate::utils::get_exclude_file_path;
 use std::process::Command;
 
+/// Returns the engine for the edit subcommand, parameterized by `cli` and `cfg`.
+///
+/// # Parameters
+///
+/// - `cli`: The CLI arguments.
+/// - `cfg`: The configuration values.
+///
+/// # Returns
+///
+/// The parametrized engine for running the edit subcommand's logic, our an
+/// error if engine creation failed.
 pub fn get_engine(cli: EditCli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(EditEngine::new(cli, cfg)?))
 }

@@ -14,6 +14,7 @@ use super::edit::EditCli;
 /// command-line, or open it for edition using your favorite editor.
 pub struct ExcludeCli {
     #[command(subcommand)]
+    /// The subcommand.
     pub command: ExcludeCommand,
 }
 

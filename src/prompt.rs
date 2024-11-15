@@ -1,3 +1,5 @@
+//! Utilities for prompting the user in the terminal.
+
 use crate::utils::trim_newline;
 use anyhow::Context;
 use crossterm::style::Stylize;
@@ -80,6 +82,30 @@ impl PromptOptions for ErrorPromptOptions {
     }
 }
 
+/// Prompts the user to continue after an error occured, forcing him
+/// to acknowledge it.
+///
+/// Outputs are to stdout and input received from stdin.
+///
+/// # Parameters
+///
+/// - `path_str`: The path for which an error occured.
+/// - `err_mess`: The error message to show the user.
+///
+/// # Errors
+///
+/// Fails if reading/writing from/to stdin/stdout fails.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use fmtna::prompt;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// prompt::error_prompt("/.../file", "The error message...")?;
+/// # Ok(())
+/// # }
+/// ```
 pub fn error_prompt(path_str: &str, err_mess: &str) -> anyhow::Result<()> {
     let prompt_mess = format!(
         "(?) {}: {}\n{}Enter a key to continue: ",
@@ -92,12 +118,20 @@ pub fn error_prompt(path_str: &str, err_mess: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// Options the user can choose when confronted to a conflict that prevents
+/// the rewriting of a filename.
 pub enum AlreadyExistPromptOptions {
+    /// Don't rewrite the filename and move on to the next one.
     Skip,
+    /// Skip for the current conflict and all further conflicts.
     AlwaysSkip,
+    /// Move the conflicting file in BACKUP_DIR, then rewrite.
     Backup,
+    /// Backup for the current conflict and all further conflicts.
     AlwaysBackup,
+    /// Overwrite the conflicting file by rewriting anyway.
     Overwrite,
+    /// Overwrite for the current conflict and all further conflicts.
     AlwaysOverwrite,
 }
 
@@ -126,6 +160,30 @@ impl PromptOptions for AlreadyExistPromptOptions {
     }
 }
 
+/// Prompts the user to choose one of the [`AlreadyExistPromptOptions`] when
+/// faced with a conflict preventing the rewriting of the filename in `path_str`.
+///
+/// # Parameters
+///
+/// - `path_str`: The path which filename we want to rewrite.
+/// - `new_path_str`: The new path we want to rewrite into, but
+///     where a file already exists.
+///
+/// # Returns
+///
+/// The option chosen by the user, or an error if reading/writing from/to
+/// stdin/stdout failed.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use fmtna::prompt;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// prompt::already_exist_prompt("/.../a file", "/.../a_file")?;
+/// # Ok(())
+/// # }
+/// ```
 pub fn already_exist_prompt(
     path_str: &str,
     new_path_str: &str,

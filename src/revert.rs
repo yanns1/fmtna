@@ -1,3 +1,5 @@
+//! Module for the revert subcommand.
+
 mod cli;
 mod data;
 mod engine;

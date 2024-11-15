@@ -1,3 +1,5 @@
+//! Utilities.
+
 use anyhow::Context;
 use clap::crate_name;
 use confy::get_configuration_file_path;
@@ -8,12 +10,14 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+/// Returns the absolute path of the exclude file.
 pub fn get_exclude_file_path() -> anyhow::Result<PathBuf> {
     let mut exclude_file_path = get_configuration_file_path(crate_name!(), crate_name!())?;
     exclude_file_path.set_file_name("exclude.txt");
     Ok(exclude_file_path)
 }
 
+/// Returns the absolute path of the history directory.
 pub fn get_history_dir_path() -> anyhow::Result<PathBuf> {
     let mut history_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
         .parent()
@@ -23,6 +27,7 @@ pub fn get_history_dir_path() -> anyhow::Result<PathBuf> {
     Ok(history_dir_path)
 }
 
+/// Returns the absolute path of the backup directory.
 pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
     let mut backups_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
         .parent()
@@ -32,6 +37,11 @@ pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
     Ok(backups_dir_path)
 }
 
+/// Removes the newline (in a cross-platfrom way) at the end of `s` if there is one.
+///
+/// # Parameters
+///
+/// - `s`
 pub fn trim_newline(s: &mut String) {
     if s.ends_with('\n') {
         s.pop();
@@ -41,14 +51,37 @@ pub fn trim_newline(s: &mut String) {
     }
 }
 
+/// Returns whether the file at path `p` is empty.
+///
+/// # Parameters
+///
+/// - `p`
 pub fn file_is_empty(p: &Path) -> io::Result<bool> {
     fs::metadata(p).map(|metadata| metadata.len() == 0)
 }
 
+/// Returns the current (local) date in format `%Y%m%d_%H%M%S%.9f`.
 pub fn get_now_str() -> String {
     chrono::Local::now().format("%Y%m%d_%H%M%S%.9f").to_string()
 }
 
+/// Skips filename rewriting when conflict encountered, i.e. when `new_path`
+/// points to an existing file.
+///
+/// Does nothing apart from writing feedback into stdout and `history_writer` in the form of:
+///
+/// ```text
+/// (s) <link> -> <target>
+/// ```
+///
+/// in dark blue (only for stdout).
+///
+/// # Parameters
+///
+/// - `path`: The path you are trying to rewrite.
+/// - `new_path`: The path you want to rewrite into, but where an existing file
+///     already exists.
+/// - `history_writer`: Where to write feeback to, in addition to stdout.
 pub fn skip<W: Write>(path: &Path, new_path: &Path, history_writer: &mut W) -> anyhow::Result<()> {
     let recap_line = format!(
         "(s) {} -> {}",
@@ -62,6 +95,35 @@ pub fn skip<W: Write>(path: &Path, new_path: &Path, history_writer: &mut W) -> a
     Ok(())
 }
 
+/// Backs up the existing file at path `new_path`, then rewrites `path`
+/// into `new_path`.
+///
+/// Finally, writes feeback into stdout and `history_writer` in the form of:
+///
+/// ```text
+/// (b) <link> -> <target>
+/// ```
+///
+/// in dark green (only for stdout).
+///
+/// # Parameters
+///
+/// - `path`: The path you are trying to rewrite.
+/// - `new_path`: The path you want to rewrite into, but where an existing file
+///     already exists.
+/// - `history_writer`: Where to write feeback to, in addition to stdout.
+///
+/// # Errors
+///
+/// Fails when:
+///
+/// - The existing file fails to be backed up, i.e. fails to be moved
+///   to the backup directory.
+/// - The rewriting/renaming fails.
+/// - Writing into `history_writer` fails.
+///
+/// These are `anyhow` errors, so most of the time, you just want to
+/// propagate them.
 pub fn backup<W: Write>(
     path: &Path,
     new_path: &Path,
@@ -107,6 +169,34 @@ pub fn backup<W: Write>(
     Ok(())
 }
 
+/// Overwrites existing file at path `new_path` by rewriting
+/// `path` into it directly.
+///
+/// Finally, writes feeback into stdout and `history_writer` in the form of:
+///
+/// ```text
+/// (o) <link> -> <target>
+/// ```
+///
+/// in dark red (only for stdout).
+///
+/// # Parameters
+///
+/// - `path`: The path you are trying to rewrite.
+/// - `new_path`: The path you want to rewrite into, but where an existing file
+///     already exists.
+/// - `history_writer`: Where to write feeback to, in addition to stdout.
+///
+/// # Errors
+///
+/// Fails when:
+///
+/// - The existing file fails to be removed.
+/// - The rewriting/renaming fails.
+/// - Writing into `history_writer` fails.
+///
+/// These are `anyhow` errors, so most of the time, you just want to
+/// propagate them.
 pub fn overwrite<W: Write>(
     path: &Path,
     new_path: &Path,
@@ -130,6 +220,7 @@ pub fn overwrite<W: Write>(
 pub mod test {
     use std::path::PathBuf;
 
+    /// Returns the absolute path to the temporary directory (where test files live).
     pub fn get_tmp_dir() -> PathBuf {
         let mut tmp_dir = std::env::current_dir().unwrap();
         tmp_dir.push(".tmp");

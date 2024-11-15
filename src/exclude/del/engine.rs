@@ -11,6 +11,17 @@ use crate::engine::Engine;
 use crate::utils::get_exclude_file_path;
 use tempfile::tempfile;
 
+/// Returns the engine for the del subcommand, parameterized by `cli` and `cfg`.
+///
+/// # Parameters
+///
+/// - `cli`: The CLI arguments.
+/// - `cfg`: The configuration values.
+///
+/// # Returns
+///
+/// The parametrized engine for running the del subcommand's logic, our an
+/// error if engine creation failed.
 pub fn get_engine(cli: DelCli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(DelEngine::new(cli, cfg)?))
 }

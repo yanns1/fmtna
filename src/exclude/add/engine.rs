@@ -12,6 +12,17 @@ use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::utils::get_exclude_file_path;
 
+/// Returns the engine for the add subcommand, parameterized by `cli` and `cfg`.
+///
+/// # Parameters
+///
+/// - `cli`: The CLI arguments.
+/// - `cfg`: The configuration values.
+///
+/// # Returns
+///
+/// The parametrized engine for running the add subcommand's logic, or an
+/// error if engine creation failed.
 pub fn get_engine(cli: AddCli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(AddEngine::new(cli, cfg)?))
 }

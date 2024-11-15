@@ -5,6 +5,7 @@ use clap::Args;
 use crate::naming_conventions::NamingConvention;
 
 #[derive(Debug, Args)]
+/// Default arguments of fmtna (or arguments of the default "subcommand").
 pub struct DefaultArgs {
     /// A list of files (of any kind) for which to format the name.
     ///

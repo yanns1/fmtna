@@ -19,6 +19,17 @@ lazy_static! {
         Regex::new(r"\((?<op>.)\)\s+(?<from>.*)\s+->\s+(?<to>.*)\s*").unwrap();
 }
 
+/// Returns the engine for the revert subcommand, parameterized by `cli` and `cfg`.
+///
+/// # Parameters
+///
+/// - `cli`: The CLI arguments.
+/// - `cfg`: The configuration values.
+///
+/// # Returns
+///
+/// The parametrized engine for running the revert subcommand's logic, or an
+/// error if engine creation failed.
 pub fn get_engine(cli: RevertCli, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(RevertEngine::new(cli, cfg)?))
 }

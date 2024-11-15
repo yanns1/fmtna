@@ -1,3 +1,5 @@
+//! Module for the exclude subcommand.
+
 mod add;
 mod cli;
 mod del;

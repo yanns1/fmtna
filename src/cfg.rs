@@ -1,3 +1,5 @@
+//! Everything related to the app's configuration file.
+
 use crate::naming_conventions::NamingConvention;
 use serde::Deserialize;
 use serde::Serialize;
@@ -25,7 +27,7 @@ pub struct Cfg {
     pub editor: String,
 }
 
-impl ::std::default::Default for Cfg {
+impl std::default::Default for Cfg {
     fn default() -> Self {
         Self {
             naming_convention: NamingConvention::SnakeCase,

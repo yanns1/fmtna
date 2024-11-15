@@ -1,3 +1,5 @@
+//! Module for the default subcommand.
+
 mod cli;
 mod data;
 mod engine;

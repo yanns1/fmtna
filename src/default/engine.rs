@@ -15,6 +15,17 @@ use std::fs::File;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
+/// Returns the engine for the default subcommand, parameterized by `cli` and `cfg`.
+///
+/// # Parameters
+///
+/// - `cli`: The CLI arguments.
+/// - `cfg`: The configuration values.
+///
+/// # Returns
+///
+/// The parametrized engine for running the default subcommand's logic, or an
+/// error if engine creation failed.
 pub fn get_engine(cli: DefaultArgs, cfg: Cfg) -> anyhow::Result<Box<dyn Engine>> {
     Ok(Box::new(DefaultEngine::new(cli, cfg)?))
 }

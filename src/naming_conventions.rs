@@ -1,3 +1,5 @@
+//! Naming conventions and corresponding converters.
+
 use clap::ValueEnum;
 use lazy_static::lazy_static;
 use serde::Deserialize;
@@ -10,27 +12,65 @@ lazy_static! {
 }
 
 #[derive(ValueEnum, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+/// The supported naming conventions a filename can be rewritten into.
 pub enum NamingConvention {
     #[serde(rename = "camelCase")]
     #[value(name = "camelCase")]
+    /// The camelCase naming convention.
     CamelCase,
     #[serde(rename = "kebab-case")]
     #[value(name = "kebab-case")]
+    /// The kebab-case naming convention.
     KebabCase,
     #[serde(rename = "snake_case")]
     #[value(name = "snake_case")]
+    /// The snake_case naming convention.
     SnakeCase,
     #[serde(rename = "PascalCase")]
     #[value(name = "PascalCase")]
+    /// The PascalCase naming convention.
     PascalCase,
     #[serde(rename = "lower")]
     #[value(name = "lower")]
+    /// The lowercase naming convention.
     Lower,
     #[serde(rename = "UPPER")]
     #[value(name = "UPPER")]
+    /// The UPPERCASE naming convention.
     Upper,
 }
 
+/// Rewrites `filename` according to the naming convention `nc`.
+///
+/// # Parameters
+///
+/// - `nc`
+/// - `filename`
+/// - `keep_dots`: Whether to keep the dots as is in `filename`
+///     or consider them as separators.
+/// - `keep_special_chars`: Whether to keep the special characters
+///     or remove them (or try converting them to a non-accented
+///     version if accented character).
+/// - `keep_unicdoe`: Whether to keep Unicode (more precisely,
+///     non-ASCII characters) characters or to remove them.
+///
+/// # Returns
+///
+/// `filename` written according to `nc`.
+///
+/// # Examples
+///
+/// ```rust
+/// use fmtna::naming_conventions as nc;
+/// use fmtna::naming_conventions::NamingConvention;
+///
+/// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let filename = "a filename with space as separator";
+/// let new_filename = nc::apply_nc(&NamingConvention::SnakeCase, filename, false, false, false);
+/// assert_eq!(new_filename, "a_filename_with_space_as_separator");
+/// # Ok(())
+/// # }
+/// ```
 pub fn apply_nc(
     nc: &NamingConvention,
     filename: &str,
