@@ -8,7 +8,6 @@ use crate::prompt::{already_exist_prompt, error_prompt, AlreadyExistPromptOption
 use crate::utils::{backup, file_is_empty, get_now_str, overwrite, skip};
 use anyhow::Context;
 use crossterm::style::Stylize;
-use path_absolutize::*;
 use std::fs;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -46,7 +45,6 @@ enum ChangeStemResult {
     FileDoesntExist,
     FailedToRetrieveFileStem,
     FileHasInvalidUnicode,
-    FailedToAbsolutizeFile(std::io::Error),
     FileHasNoParentDirectory,
     NewFileAlreadyExist(PathBuf),
     FailedToRename(std::io::Error),
@@ -75,11 +73,6 @@ impl DefaultEngine {
         }
         let file_stem = file_stem.unwrap();
 
-        let file = file.absolutize();
-        if let Err(err) = file {
-            return ChangeStemResult::FailedToAbsolutizeFile(err);
-        }
-        let file = file.unwrap();
         let parent_dir = file.parent();
         if parent_dir.is_none() {
             return ChangeStemResult::FileHasNoParentDirectory;
@@ -144,7 +137,6 @@ impl DefaultEngine {
 
         match self.change_stem_of_file(&f) {
             ChangeStemResult::FileDoesntExist => {
-                let f = f.absolutize()?;
                 let f_str = f.to_string_lossy();
                 let err_mess = "File doesn't exist.";
 
@@ -156,7 +148,6 @@ impl DefaultEngine {
                     .with_context(|| "Failed to write to history file.")?;
             }
             ChangeStemResult::FailedToRetrieveFileStem => {
-                let f = f.absolutize()?;
                 let f_str = f.to_string_lossy();
                 let err_mess = "Failed to find the stem.";
 
@@ -168,7 +159,6 @@ impl DefaultEngine {
                     .with_context(|| "Failed to write to history file.")?;
             }
             ChangeStemResult::FileHasInvalidUnicode => {
-                let f = f.absolutize()?;
                 let f_str = f.to_string_lossy();
                 let err_mess = "File contains invalid unicode characters.";
 
@@ -179,19 +169,7 @@ impl DefaultEngine {
                 writeln!(history_writer, "{}", recap_line)
                     .with_context(|| "Failed to write to history file.")?;
             }
-            ChangeStemResult::FailedToAbsolutizeFile(err) => {
-                let f_str = f.to_string_lossy();
-                let err_mess = format!("Failed to absolutize. {}", err);
-
-                error_prompt(&f_str, &err_mess)?;
-
-                let recap_line = format!("(e) {}: {}", f_str, err_mess);
-                println!("{}", recap_line.clone().dark_red());
-                writeln!(history_writer, "{}", recap_line)
-                    .with_context(|| "Failed to write to history file.")?;
-            }
             ChangeStemResult::FileHasNoParentDirectory => {
-                let f = f.absolutize()?;
                 let f_str = f.to_string_lossy();
                 let err_mess = "File has no parent directory";
 
@@ -203,8 +181,6 @@ impl DefaultEngine {
                     .with_context(|| "Failed to write to history file.")?;
             }
             ChangeStemResult::NewFileAlreadyExist(new_f) => {
-                let f = f.absolutize()?;
-
                 if let Some(ref action) = self.action {
                     match action {
                         Action::Skip => skip(&f, &new_f, history_writer)?,
@@ -263,7 +239,6 @@ impl DefaultEngine {
                 }
             }
             ChangeStemResult::Ok(new_f) => {
-                let f = f.absolutize()?;
                 let f_str = f.to_string_lossy();
                 let new_f_str = new_f.to_string_lossy();
 

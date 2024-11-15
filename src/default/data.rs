@@ -3,7 +3,10 @@ use crate::cfg::Cfg;
 use crate::naming_conventions::NamingConvention;
 use crate::paths::EXCLUDE_FILE_PATH;
 use anyhow::anyhow;
+use anyhow::Context;
+use path_absolutize::*;
 use regex::Regex;
+use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
@@ -72,8 +75,26 @@ impl Data {
             }
         }
 
+        // Absolutize paths.
+        let files: anyhow::Result<Vec<_>> = cli
+            .files
+            .iter()
+            .map(|f| -> anyhow::Result<PathBuf> {
+                let new_f = f.absolutize().with_context(|| {
+                    format!("Failed to absolutize path '{}'.", f.to_string_lossy())
+                })?;
+                Ok(new_f.into_owned())
+            })
+            .collect();
+        let mut files = files?;
+        // Sort file paths by length so that files appear before (seeing the
+        // vector as a stack) their parent directories. Otherwise, a directory name
+        // may change before files within it are processed, making these
+        // file paths outdated and failing to rename them.
+        files.sort_by_key(|p| AsRef::<OsStr>::as_ref(p).len());
+
         Ok(Data {
-            files: cli.files,
+            files,
             naming_convention,
             recursive,
             keep_dots,
