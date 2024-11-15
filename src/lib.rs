@@ -7,6 +7,7 @@ pub mod default;
 pub mod engine;
 pub mod exclude;
 pub mod naming_conventions;
+pub mod paths;
 pub mod prompt;
 pub mod revert;
 pub mod utils;

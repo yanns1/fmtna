@@ -1,9 +1,10 @@
 use super::RevertCli;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
+use crate::paths::HISTORY_DIR_PATH;
 use crate::prompt::{already_exist_prompt, error_prompt, AlreadyExistPromptOptions};
 use crate::revert::data::Data;
-use crate::utils::{backup, file_is_empty, get_history_dir_path, get_now_str, overwrite, skip};
+use crate::utils::{backup, file_is_empty, get_now_str, overwrite, skip};
 use anyhow::anyhow;
 use anyhow::Context;
 use crossterm::style::Stylize;
@@ -56,7 +57,7 @@ impl Engine for RevertEngine {
     fn run(&mut self) -> anyhow::Result<()> {
         // Create a backup file
         // ^^^^^^^^^^^^^^^^^^^^
-        let mut history_path = get_history_dir_path()?;
+        let mut history_path = HISTORY_DIR_PATH.clone();
         history_path.push(get_now_str());
         // Don't check if already exists as it shouldn't given the very precise time used for
         // the name.

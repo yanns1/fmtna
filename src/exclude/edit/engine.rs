@@ -4,7 +4,7 @@ use super::cli::EditCli;
 use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
-use crate::utils::get_exclude_file_path;
+use crate::paths::EXCLUDE_FILE_PATH;
 use std::process::Command;
 
 /// Returns the engine for the edit subcommand, parameterized by `cli` and `cfg`.
@@ -35,7 +35,7 @@ impl EditEngine {
 
 impl Engine for EditEngine {
     fn run(&mut self) -> anyhow::Result<()> {
-        let exclude_file_path = get_exclude_file_path()?;
+        let exclude_file_path = &*EXCLUDE_FILE_PATH;
 
         let status = if cfg!(windows) {
             Command::new("cmd")

@@ -1,14 +1,12 @@
-use std::path::PathBuf;
-
-use regex::Regex;
-
 use super::cli::DefaultArgs;
 use crate::cfg::Cfg;
 use crate::naming_conventions::NamingConvention;
-use crate::utils::get_exclude_file_path;
+use crate::paths::EXCLUDE_FILE_PATH;
 use anyhow::anyhow;
+use regex::Regex;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 #[derive(Debug)]
 pub struct Data {
@@ -47,7 +45,7 @@ impl Data {
         // but not sure if it will ever by a practical concern, so keep the simple
         // way of doing things for now.
         let mut exclude_regexes: Vec<Regex> = vec![];
-        let exclude_file_path = get_exclude_file_path()?;
+        let exclude_file_path = &*EXCLUDE_FILE_PATH;
         if exclude_file_path.exists() {
             let file = File::open(exclude_file_path.clone())?;
             let reader = BufReader::new(file);

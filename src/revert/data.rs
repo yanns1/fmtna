@@ -26,7 +26,7 @@ impl Data {
 mod tests {
     use super::*;
     use crate::naming_conventions::NamingConvention;
-    use crate::utils::test::get_tmp_dir;
+    use crate::paths::tests::TMP_DIR_PATH;
     use serial_test::serial;
     use std::fs;
 
@@ -38,7 +38,7 @@ mod tests {
     }
 
     fn mk_backup_file() -> PathBuf {
-        let tmp_dir = get_tmp_dir();
+        let tmp_dir = &*TMP_DIR_PATH;
         if !tmp_dir.exists() {
             if let Err(err) = fs::create_dir(&tmp_dir) {
                 panic!("{:?}", err);
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn data_instantiation_fails_if_invalid_backup_file() {
-        let mut backup_file = get_tmp_dir();
+        let mut backup_file = TMP_DIR_PATH.clone();
         backup_file.push("inexistant_backup_file");
 
         let cli = RevertCli {

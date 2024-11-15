@@ -1,17 +1,17 @@
-use std::io::{BufWriter, Write};
-
 use super::cli::DefaultArgs;
 use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
 use crate::naming_conventions::apply_nc;
+use crate::paths::HISTORY_DIR_PATH;
 use crate::prompt::{already_exist_prompt, error_prompt, AlreadyExistPromptOptions};
-use crate::utils::{backup, file_is_empty, get_history_dir_path, get_now_str, overwrite, skip};
+use crate::utils::{backup, file_is_empty, get_now_str, overwrite, skip};
 use anyhow::Context;
 use crossterm::style::Stylize;
 use path_absolutize::*;
 use std::fs;
 use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -292,7 +292,7 @@ impl Engine for DefaultEngine {
     fn run(&mut self) -> anyhow::Result<()> {
         // Create a backup file
         // ^^^^^^^^^^^^^^^^^^^^
-        let mut history_path = get_history_dir_path()?;
+        let mut history_path = HISTORY_DIR_PATH.clone();
         history_path.push(get_now_str());
         // Don't check if already exists as it shouldn't given the very precise time used for
         // the name.

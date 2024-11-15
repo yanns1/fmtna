@@ -1,41 +1,12 @@
 //! Utilities.
 
+use crate::paths::BACKUP_DIR_PATH;
 use anyhow::Context;
-use clap::crate_name;
-use confy::get_configuration_file_path;
 use crossterm::style::Stylize;
 use std::fs;
 use std::io;
 use std::io::Write;
 use std::path::Path;
-use std::path::PathBuf;
-
-/// Returns the absolute path of the exclude file.
-pub fn get_exclude_file_path() -> anyhow::Result<PathBuf> {
-    let mut exclude_file_path = get_configuration_file_path(crate_name!(), crate_name!())?;
-    exclude_file_path.set_file_name("exclude.txt");
-    Ok(exclude_file_path)
-}
-
-/// Returns the absolute path of the history directory.
-pub fn get_history_dir_path() -> anyhow::Result<PathBuf> {
-    let mut history_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
-        .parent()
-        .with_context(|| "Failed to get parent directory of configuration file.")?
-        .to_owned();
-    history_dir_path.push("history");
-    Ok(history_dir_path)
-}
-
-/// Returns the absolute path of the backup directory.
-pub fn get_backups_dir_path() -> anyhow::Result<PathBuf> {
-    let mut backups_dir_path = get_configuration_file_path(crate_name!(), crate_name!())?
-        .parent()
-        .with_context(|| "Failed to get parent directory of configuration file.")?
-        .to_owned();
-    backups_dir_path.push("backups");
-    Ok(backups_dir_path)
-}
 
 /// Removes the newline (in a cross-platfrom way) at the end of `s` if there is one.
 ///
@@ -140,7 +111,7 @@ pub fn backup<W: Write>(
         new_name.push('.');
         new_name.push_str(&extension.to_string_lossy());
     }
-    let mut backup_path = get_backups_dir_path()?;
+    let mut backup_path = BACKUP_DIR_PATH.clone();
     backup_path.push(new_name);
 
     // Make the backup
@@ -214,16 +185,4 @@ pub fn overwrite<W: Write>(
         .with_context(|| "Failed to write to history file.")?;
 
     Ok(())
-}
-
-#[cfg(test)]
-pub mod test {
-    use std::path::PathBuf;
-
-    /// Returns the absolute path to the temporary directory (where test files live).
-    pub fn get_tmp_dir() -> PathBuf {
-        let mut tmp_dir = std::env::current_dir().unwrap();
-        tmp_dir.push(".tmp");
-        tmp_dir
-    }
 }

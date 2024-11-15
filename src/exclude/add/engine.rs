@@ -1,16 +1,13 @@
-use std::fs::File;
-use std::fs::OpenOptions;
-
-use std::io::Write;
-use std::io::{BufRead, BufReader};
-
-use anyhow::Context;
-
 use super::cli::AddCli;
 use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
-use crate::utils::get_exclude_file_path;
+use crate::paths::EXCLUDE_FILE_PATH;
+use anyhow::Context;
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::io::{BufRead, BufReader};
 
 /// Returns the engine for the add subcommand, parameterized by `cli` and `cfg`.
 ///
@@ -40,7 +37,7 @@ impl AddEngine {
 
 impl Engine for AddEngine {
     fn run(&mut self) -> anyhow::Result<()> {
-        let exclude_file_path = get_exclude_file_path()?;
+        let exclude_file_path = &*EXCLUDE_FILE_PATH;
 
         // Check if pattern to add already is in exclude file
         if exclude_file_path.exists() {

@@ -1,14 +1,12 @@
-use edit_distance::edit_distance;
-use std::fs::OpenOptions;
-use std::io::{self, BufRead, BufReader, Seek, SeekFrom, Write};
-
-use anyhow::Context;
-
 use super::cli::DelCli;
 use super::data::Data;
 use crate::cfg::Cfg;
 use crate::engine::Engine;
-use crate::utils::get_exclude_file_path;
+use crate::paths::EXCLUDE_FILE_PATH;
+use anyhow::Context;
+use edit_distance::edit_distance;
+use std::fs::OpenOptions;
+use std::io::{self, BufRead, BufReader, Seek, SeekFrom, Write};
 use tempfile::tempfile;
 
 /// Returns the engine for the del subcommand, parameterized by `cli` and `cfg`.
@@ -39,7 +37,7 @@ impl DelEngine {
 
 impl Engine for DelEngine {
     fn run(&mut self) -> anyhow::Result<()> {
-        let exclude_file_path = get_exclude_file_path()?;
+        let exclude_file_path = &*EXCLUDE_FILE_PATH;
 
         if !exclude_file_path.exists() {
             println!(
