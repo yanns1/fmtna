@@ -53,7 +53,7 @@ Run `cargo install fmtna` in your terminal.
 - You need Git installed.
 
 Clone this repo and run `./install.sh` from the root of the repo (you might need to give the script executable permission).
-`install.sh` builds the project using cargo then make a symlink at `~/.local/bin/fmtna` targeting the executable produced.
+`install.sh` builds the project using cargo then makes a symlink at `~/.local/bin/fmtna` targeting the executable produced.
 
 ## Usage
 
