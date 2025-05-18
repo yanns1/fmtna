@@ -7,7 +7,7 @@ description = "A CLI app to format filenames according to a chosen naming conven
 readme = "README.md"
 repository = "https://github.com/yanns1/fmtna"
 license = "GPL-3.0"
-keyworks = ["format", "filenames", "naming convention"]
+keywords = ["format", "filenames", "naming convention"]
 categories = ["command-line-utilities"]
 exclude = [
     ".github/*",
